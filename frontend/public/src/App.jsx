@@ -1,5 +1,6 @@
 import './styles/App.css';
 import ItemCard from './components/ItemCard/ItemCard';
+import Navbar from './components/common/Navbar'; 
 
 function App() {
 
@@ -22,6 +23,8 @@ function App() {
   ];
 
   return (
+    <>
+  <Navbar/>
     <div className="app-container">
       <h1>Artículos para renta de eventos</h1>
       <div className="items-list">
@@ -30,6 +33,7 @@ function App() {
         ))}
       </div>
     </div>
+  </>
   );
 }
 
