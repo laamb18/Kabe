@@ -4,7 +4,7 @@
 
     const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [cartCount] = useState(3); // Simulado - conectar con Context después
+    const [cartCount] = useState(0); // Simulado - conectar con Context después
     const [isAdmin] = useState(false); // Simulado - conectar con AuthContext después
     const location = useLocation();
 
