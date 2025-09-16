@@ -2,6 +2,7 @@ import './styles/App.css';
 import Navbar from './components/common/Navbar'; 
 import HeroSlider from './components/common/HeroSlider';
 import PackagesSection from './components/common/PackagesSection';
+import ProductsSection from './components/common/ProductsSection';
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <Navbar/>
       <HeroSlider/>
       <PackagesSection/>
+      <ProductsSection/>
     </>
   );
 }

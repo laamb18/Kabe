@@ -1,0 +1,177 @@
+/* ProductsSection Styles - Layout Horizontal */
+.products-section {
+  padding: 4rem 0;
+  background: #ffffff;
+}
+
+.products-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.products-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 3rem 0;
+  color: #333;
+  position: relative;
+}
+
+.products-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: #22A89D;
+  border-radius: 2px;
+}
+
+/* Grid Layout Horizontal - Como en la imagen */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+  justify-items: center;
+}
+
+/* Botón Ver más - Estilo turquesa redondeado */
+.products-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.products-btn-more {
+  background: #22A89D;
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(34, 168, 157, 0.3);
+  min-width: 150px;
+}
+
+.products-btn-more:hover {
+  background: #1e9688;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 168, 157, 0.4);
+}
+
+.products-btn-more:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .products-container {
+    padding: 0 1rem;
+  }
+  
+  .products-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  
+  .products-btn-more {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .products-section {
+    padding: 3rem 0;
+  }
+  
+  .products-container {
+    padding: 0 0.75rem;
+  }
+  
+  .products-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .products-btn-more {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+/* Animaciones de entrada */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.products-grid .product-card {
+  animation: fadeInScale 0.6s ease forwards;
+}
+
+.products-grid .product-card:nth-child(1) { animation-delay: 0.1s; }
+.products-grid .product-card:nth-child(2) { animation-delay: 0.2s; }
+.products-grid .product-card:nth-child(3) { animation-delay: 0.3s; }
+.products-grid .product-card:nth-child(4) { animation-delay: 0.4s; }
+.products-grid .product-card:nth-child(5) { animation-delay: 0.5s; }
+.products-grid .product-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Estados de focus para accesibilidad */
+.products-btn-more:focus {
+  outline: 2px solid #AB4B02;
+  outline-offset: 2px;
+}
+
+/* Mejoras visuales adicionales */
+.products-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+}
+
+/* Efecto parallax sutil en scroll */
+@media (prefers-reduced-motion: no-preference) {
+  .products-title {
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+  }
+}
