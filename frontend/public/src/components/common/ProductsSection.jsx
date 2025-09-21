@@ -1,7 +1,13 @@
+import { useNavigate } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import '../../styles/components/common/ProductsSection.css';
 
 const ProductsSection = () => {
+  const navigate = useNavigate();
+
+  const handleVerMas = () => {
+    navigate('/productos');
+  };
   // Mock data de ejemplo para productos
   const productsData = [
     {
@@ -45,7 +51,7 @@ const ProductsSection = () => {
         </div>
         
         <div className="products-actions">
-          <button className="products-btn-more">
+          <button className="products-btn-more" onClick={handleVerMas}>
             ver más
           </button>
         </div>

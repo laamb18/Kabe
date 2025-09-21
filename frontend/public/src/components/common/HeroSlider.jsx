@@ -3,11 +3,14 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { Pagination, Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import SplitText from "./SplitText";
 import sillaImg from "../../../images/silla.jpg";
 import "../../styles/components/common/HeroSlider.css";
 
 export default function HeroSlider() {
+    const navigate = useNavigate();
+    
     const slides = [
         { 
             image: sillaImg, 
@@ -25,6 +28,20 @@ export default function HeroSlider() {
             subtitle: "Los mejores productos para eventos únicos"
         },
     ];
+
+    const handleVerPaquetes = () => {
+        navigate('/paquetes');
+    };
+
+    const handleCotizarAhora = () => {
+        const contactSection = document.getElementById('contact-section');
+        if (contactSection) {
+            contactSection.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    };
 
     // Variantes de animación para Framer Motion
     const containerVariants = {
@@ -106,6 +123,7 @@ export default function HeroSlider() {
                                         className="hero-btn primary"
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
+                                        onClick={handleVerPaquetes}
                                     >
                                         Ver Paquetes
                                     </motion.button>
@@ -113,6 +131,7 @@ export default function HeroSlider() {
                                         className="hero-btn secondary"
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
+                                        onClick={handleCotizarAhora}
                                     >
                                         Cotizar Ahora
                                     </motion.button>

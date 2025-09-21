@@ -22,9 +22,9 @@
 }
 
 .navbar-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -38,6 +38,10 @@
   color: var(--primary-orange);
   text-decoration: none;
   transition: var(--transition);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .navbar-logo:hover {
@@ -50,6 +54,8 @@
   display: flex;
   align-items: center;
   gap: 2rem;
+  flex: 1;
+  justify-content: center;
 }
 
 .navbar-nav {
@@ -57,7 +63,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .navbar-item {
@@ -80,20 +86,14 @@
   color: var(--primary-teal);
 }
 
+/* Remover estilos activos para uniformidad */
 .navbar-link.active {
-  color: var(--primary-orange);
-  background: rgba(171, 75, 2, 0.1);
+  color: var(--dark-gray);
+  background: transparent;
 }
 
 .navbar-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  height: 2px;
-  background: var(--primary-orange);
+  display: none;
 }
 
 .navbar-divider {
@@ -107,11 +107,94 @@
   color: var(--primary-teal) !important;
 }
 
+/* Botones de scroll - mismo estilo que links normales */
+.navbar-scroll-btn {
+  background: none;
+  border: none;
+  display: block;
+  padding: 0.75rem 1rem;
+  color: var(--dark-gray);
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: var(--transition);
+  position: relative;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.navbar-scroll-btn:hover {
+  background: var(--light-gray);
+  color: var(--primary-teal);
+}
+
+/* Remover estilos activos especiales para uniformidad */
+.navbar-scroll-btn.active {
+  color: var(--dark-gray);
+  background: transparent;
+}
+
+.navbar-scroll-btn.active::after {
+  display: none;
+}
+
+/* Barra de búsqueda */
+.navbar-search {
+  display: flex;
+  align-items: center;
+  background: var(--light-gray);
+  border-radius: 25px;
+  padding: 0.25rem;
+  border: 2px solid transparent;
+  transition: var(--transition);
+  width: 250px;
+}
+
+.navbar-search:focus-within {
+  border-color: var(--primary-teal);
+  box-shadow: 0 0 0 3px rgba(34, 168, 157, 0.1);
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: var(--dark-gray);
+  flex: 1;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-btn {
+  background: var(--primary-teal);
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.search-btn:hover {
+  background: #1e9688;
+  transform: scale(1.05);
+}
+
 /* Actions */
 .navbar-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
 }
 
 .navbar-cart {
@@ -191,23 +274,25 @@
 .login-btn {
   background: transparent;
   color: var(--primary-teal);
-  border: 2px solid var(--primary-teal);
+  border: 1px solid var(--primary-teal);
 }
 
 .login-btn:hover {
   background: var(--primary-teal);
   color: var(--white);
+  transform: translateY(-1px);
 }
 
 .register-btn {
   background: var(--primary-orange);
   color: var(--white);
-  border: 2px solid var(--primary-orange);
+  border: 1px solid var(--primary-orange);
 }
 
 .register-btn:hover {
-  background: transparent;
-  color: var(--primary-orange);
+  background: #8a3a01;
+  border-color: #8a3a01;
+  transform: translateY(-1px);
 }
 
 .logout-btn {
@@ -293,14 +378,90 @@
   transition: var(--transition);
 }
 
-.mobile-link:hover,
-.mobile-link.active {
+.mobile-link:hover {
   background: var(--light-gray);
   color: var(--primary-teal);
 }
 
+/* Remover estilos activos en móvil */
+.mobile-link.active {
+  background: transparent;
+  color: var(--dark-gray);
+}
+
 .mobile-link.user-link {
   color: var(--primary-teal);
+}
+
+/* Botones de scroll móvil - mismo estilo que links móviles */
+.mobile-scroll-btn {
+  display: block;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  color: var(--dark-gray);
+  text-decoration: none;
+  transition: var(--transition);
+  text-align: left;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mobile-scroll-btn:hover {
+  background: var(--light-gray);
+  color: var(--primary-teal);
+}
+
+/* Remover estilos activos en móvil */
+.mobile-scroll-btn.active {
+  background: transparent;
+  color: var(--dark-gray);
+}
+
+/* Búsqueda móvil */
+.mobile-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: var(--light-gray);
+  margin: 0.5rem 1.5rem;
+  border-radius: 8px;
+}
+
+.mobile-search-input {
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  background: white;
+  transition: var(--transition);
+}
+
+.mobile-search-input:focus {
+  outline: none;
+  border-color: var(--primary-teal);
+}
+
+.mobile-search-btn {
+  padding: 0.75rem;
+  background: var(--primary-teal);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mobile-search-btn:hover {
+  background: #1e9688;
 }
 
 .mobile-divider {
@@ -372,6 +533,45 @@
   
   .user-menu .logout-btn {
     display: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .navbar-container {
+    padding: 0 1.5rem;
+  }
+  
+  .navbar-menu {
+    gap: 1.5rem;
+  }
+  
+  .navbar-search {
+    width: 200px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .navbar-container {
+    padding: 0 1rem;
+  }
+  
+  .navbar-menu {
+    gap: 1rem;
+  }
+  
+  .navbar-search {
+    width: 180px;
+  }
+  
+  .search-input {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .search-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
   }
 }
 

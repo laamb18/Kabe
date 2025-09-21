@@ -57,7 +57,7 @@ const ContactSection = () => {
   ];
 
   return (
-    <section className="contact-section">
+    <section className="contact-section" id="contact-section">
       <div className="contact-container">
         <div className="contact-header">
           <h2 className="contact-title">Solicita tu Cotización</h2>

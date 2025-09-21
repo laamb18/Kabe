@@ -1,7 +1,13 @@
+import { useNavigate } from 'react-router-dom';
 import PackageCard from './PackageCard';
 import '../../styles/components/common/PackagesSection.css';
 
 const PackagesSection = () => {
+  const navigate = useNavigate();
+
+  const handleVerMas = () => {
+    navigate('/paquetes');
+  };
   // Mock data de ejemplo
   const packagesData = [
     {
@@ -51,7 +57,7 @@ const PackagesSection = () => {
         </div>
         
         <div className="packages-actions">
-          <button className="packages-btn-more">
+          <button className="packages-btn-more" onClick={handleVerMas}>
             Ver más
           </button>
         </div>
