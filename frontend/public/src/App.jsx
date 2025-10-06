@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Products from './pages/Products';
+import Packages from './pages/Packages';
 
 function App() {
   const location = useLocation();
@@ -22,14 +23,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/registro" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          {/* Rutas adicionales que puedes agregar después */}
-          <Route path="/paquetes" element={
-            <div className="coming-soon">
-              <h1>Nuestros Paquetes</h1>
-              <p>Próximamente disponible</p>
-            </div>
-          } />
+          <Route path="/paquetes" element={<Packages />} />
+          <Route path="/categorias" element={<Packages />} />
           <Route path="/productos" element={<Products />} />
+          {/* Rutas adicionales que puedes agregar después */}
           <Route path="/carrito" element={
             <div className="coming-soon">
               <h1>Carrito de Compras</h1>

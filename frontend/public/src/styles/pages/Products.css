@@ -1,0 +1,308 @@
+/* Products Page - Siguiendo la paleta de colores del proyecto */
+:root {
+  --primary-orange: #AB4B02;
+  --primary-teal: #22A89D;
+  --white: #ffffff;
+  --light-gray: #f8f9fa;
+  --dark-gray: #333333;
+  --border-color: #e0e0e0;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --transition: all 0.3s ease;
+}
+
+.products-page {
+  min-height: 100vh;
+  background: var(--white);
+  padding: 2rem 0;
+  border-top: 4px solid;
+  border-image: linear-gradient(90deg, var(--primary-orange), var(--primary-teal)) 1;
+}
+
+.products-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.products-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.products-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--dark-gray);
+  margin: 0 0 1rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.products-divider {
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-orange), var(--primary-teal));
+  margin: 0 auto 1.5rem;
+  border-radius: 2px;
+}
+
+.products-subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Filtros de categoría */
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.category-filters button {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--border-color);
+  background: var(--white);
+  border-radius: 25px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--dark-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-filters button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.category-filters button:hover::before {
+  left: 100%;
+}
+
+.category-filters button:hover {
+  background: var(--primary-teal);
+  color: var(--white);
+  border-color: var(--primary-teal);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(34, 168, 157, 0.3);
+}
+
+.category-filters button.active {
+  background: var(--primary-orange);
+  color: var(--white);
+  border-color: var(--primary-orange);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(171, 75, 2, 0.3);
+}
+
+.category-filters button.active:hover {
+  background: var(--white);
+  color: var(--primary-orange);
+  border-color: var(--primary-orange);
+}
+
+/* Grid de productos */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+/* Estados de loading */
+.products-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.products-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--primary-orange);
+  border-radius: 50%;
+  animation: products-spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes products-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.products-loading p {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Estados de error */
+.products-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.products-error p {
+  font-size: 1.1rem;
+  color: #e74c3c;
+  margin: 0 0 1.5rem 0;
+}
+
+.products-retry-btn {
+  background: var(--primary-orange);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.products-retry-btn:hover {
+  background: var(--white);
+  color: var(--primary-orange);
+  border: 2px solid var(--primary-orange);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(171, 75, 2, 0.3);
+}
+
+/* Estado vacío */
+.products-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.products-empty p {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .products-page {
+    padding: 1.5rem 0;
+  }
+  
+  .products-title {
+    font-size: 2.2rem;
+  }
+  
+  .products-subtitle {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .category-filters {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+  
+  .category-filters button {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .products-header {
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .products-container {
+    padding: 0 0.75rem;
+  }
+  
+  .products-title {
+    font-size: 1.8rem;
+  }
+  
+  .products-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .category-filters {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  
+  .category-filters button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .products-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
+  .products-loading,
+  .products-error,
+  .products-empty {
+    padding: 3rem 1rem;
+  }
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .products-spinner {
+    animation: none;
+  }
+  
+  .category-filters button:hover,
+  .products-retry-btn:hover {
+    transform: none;
+  }
+  
+  .category-filters button::before {
+    display: none;
+  }
+}
+
+/* Estados de focus para accesibilidad */
+.category-filters button:focus,
+.products-retry-btn:focus {
+  outline: 2px solid var(--primary-orange);
+  outline-offset: 2px;
+}

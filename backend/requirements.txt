@@ -25,6 +25,6 @@ python-dateutil==2.8.2
 # Compatible con googletrans (versión específica de httpx)
 httpx==0.13.3
 
-# Desarrollo y testing (opcional)
+# Desarrollo y testing 
 pytest==7.4.3
 pytest-asyncio==0.21.1

@@ -1,64 +1,85 @@
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import PackageCard from './PackageCard';
+import { categoriasService } from '../../services/api';
 import '../../styles/components/common/PackagesSection.css';
 
 const PackagesSection = () => {
   const navigate = useNavigate();
+  const [categorias, setCategorias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadCategorias = async () => {
+      try {
+        setLoading(true);
+        const data = await categoriasService.getAll();
+        setCategorias(data);
+      } catch (err) {
+        setError('Error al cargar los paquetes');
+        console.error('Error loading categorias:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategorias();
+  }, []);
 
   const handleVerMas = () => {
     navigate('/paquetes');
   };
-  // Mock data de ejemplo
-  const packagesData = [
-    {
-      id: 1,
-      name: "Paquete Premium",
-      imageUrl: "/images/package-premium.jpg",
-      shortDescription: "Todo incluido para eventos de lujo con servicio completo"
-    },
-    {
-      id: 2,
-      name: "Paquete Básico",
-      imageUrl: "/images/package-basic.jpg", 
-      shortDescription: "Esencial para eventos pequeños y familiares"
-    },
-    {
-      id: 3,
-      name: "Paquete Empresarial",
-      imageUrl: "/images/package-corporate.jpg",
-      shortDescription: "Perfecto para eventos corporativos y conferencias"
-    },
-    {
-      id: 4,
-      name: "Paquete Bodas",
-      imageUrl: "/images/package-wedding.jpg",
-      shortDescription: "Especializado en bodas y ceremonias románticas"
-    },
-    {
-      id: 5,
-      name: "Paquete Infantil",
-      imageUrl: "/images/package-kids.jpg",
-      shortDescription: "Diversión garantizada para fiestas infantiles"
-    }
-  ];
+
+  const handleCategoryClick = (categoriaId) => {
+    navigate(`/productos?categoria=${categoriaId}`);
+  };
+
+  if (loading) {
+    return (
+      <section className="packages-section">
+        <div className="packages-container">
+          <h2 className="packages-title">Nuestros Paquetes</h2>
+          <div className="loading-message">Cargando paquetes...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="packages-section">
+        <div className="packages-container">
+          <h2 className="packages-title">Nuestros Paquetes</h2>
+          <div className="error-message">{error}</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="packages-section">
       <div className="packages-container">
-        <h2 className="packages-title">Nuestros paquetes</h2>
+        <h2 className="packages-title">Nuestros Paquetes</h2>
         
         <div className="packages-grid">
-          {packagesData.map((packageInfo) => (
+          {categorias.map((categoria) => (
             <PackageCard 
-              key={packageInfo.id} 
-              packageInfo={packageInfo} 
+              key={categoria.categoria_id} 
+              packageInfo={{
+                id: categoria.categoria_id,
+                name: categoria.nombre,
+                imageUrl: categoria.imagen_url || "/images/silla.jpg",
+                shortDescription: categoria.descripcion || `Explora nuestra selección de ${categoria.nombre.toLowerCase()}`
+              }}
+              onClick={handleCategoryClick}
             />
           ))}
         </div>
         
         <div className="packages-actions">
           <button className="packages-btn-more" onClick={handleVerMas}>
-            Ver más
+            Ver todos los paquetes
           </button>
         </div>
       </div>

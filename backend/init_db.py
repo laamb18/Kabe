@@ -1,5 +1,13 @@
 """
-Script para inicializar la base de datos con datos de prueba
+Script para inicializar l        # Crear categorías
+        categorias = [
+            Categoria(nombre="Sillas", descripcion="Sillas para eventos de diferentes estilos", activo=True),
+            Categoria(nombre="Mesas", descripcion="Mesas redondas, rectangulares y cocktail", activo=True),
+            Categoria(nombre="Mantelería", descripcion="Manteles, servilletas y decoración textil", activo=True),
+            Categoria(nombre="Carpas", descripcion="Carpas y toldos para eventos al aire libre", activo=True),
+            Categoria(nombre="Iluminación", descripcion="Luces ambientales y decorativas", activo=True),
+            Categoria(nombre="Audio", descripcion="Sistemas de sonido y micrófonos", activo=True)
+        ] datos con datos de prueba
 """
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, engine
