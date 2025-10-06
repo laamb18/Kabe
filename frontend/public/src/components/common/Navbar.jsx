@@ -19,6 +19,7 @@
     const navItems = [
         { path: '/', label: 'Inicio', type: 'home' },
         { path: '/paquetes', label: 'Paquetes', type: 'link' },
+        { path: '/productos', label: 'Productos', type: 'link' },
         { path: '#contact', label: 'Cotización', type: 'scroll' },
         { path: '#contact', label: 'Contacto', type: 'scroll' }
     ];
