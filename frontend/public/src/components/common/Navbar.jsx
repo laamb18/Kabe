@@ -1,20 +1,37 @@
-    import { useState, useEffect } from 'react';
-    import { Link, useLocation, useNavigate } from 'react-router-dom';
-    import '../../styles/components/common/Navbar.css';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import '../../styles/components/common/Navbar.css';
 
     const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [cartCount] = useState(0); // TODO: conectar con Context
-    const [isLoggedIn] = useState(false); // TODO: conectar con AuthContext
-    const [user] = useState(null); // TODO: conectar con AuthContext
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const { user, logout, isAuthenticated } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
+    const profileMenuRef = useRef(null);
 
     // Cerrar menú móvil al cambiar de ruta
     useEffect(() => {
         setIsMenuOpen(false);
+        setIsProfileMenuOpen(false);
     }, [location]);
+
+    // Cerrar menú de perfil al hacer click fuera
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+                setIsProfileMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const navItems = [
         { path: '/', label: 'Inicio', type: 'home' },
@@ -24,18 +41,17 @@
         { path: '#contact', label: 'Contacto', type: 'scroll' }
     ];
 
-    const userMenuItems = isLoggedIn ? [
-        { path: '/perfil', label: 'Mi Perfil' },
-        { path: '/mis-eventos', label: 'Mis Eventos' },
-        { path: '/historial', label: 'Historial' }
-    ] : [];
-
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
 
     const closeMenu = () => {
         setIsMenuOpen(false);
+        setIsProfileMenuOpen(false);
+    };
+
+    const toggleProfileMenu = () => {
+        setIsProfileMenuOpen(!isProfileMenuOpen);
     };
 
     const isActiveLink = (path) => {
@@ -43,14 +59,21 @@
     };
 
     const handleAuth = () => {
-        // TODO: Implementar lógica de login/logout
-        if (isLoggedIn) {
+        if (isAuthenticated()) {
             // Logout logic
-            console.log('Cerrando sesión...');
+            logout();
+            console.log('Sesión cerrada');
+            navigate('/');
+            setIsProfileMenuOpen(false);
         } else {
             // Redirect to login
-            console.log('Redirigiendo a login...');
+            navigate('/login');
         }
+    };
+
+    const handleProfileNavigation = (path) => {
+        navigate(path);
+        setIsProfileMenuOpen(false);
     };
 
     const handleNavClick = (item) => {
@@ -146,23 +169,6 @@
                     )}
                 </li>
                 ))}
-                
-                {/* User menu items (solo si está logueado) */}
-                {isLoggedIn && userMenuItems.length > 0 && (
-                <>
-                    <li className="navbar-divider"></li>
-                    {userMenuItems.map((item) => (
-                    <li key={item.path} className="navbar-item">
-                        <Link
-                        to={item.path}
-                        className={`navbar-link user-link ${isActiveLink(item.path) ? 'active' : ''}`}
-                        >
-                        {item.label}
-                        </Link>
-                    </li>
-                    ))}
-                </>
-                )}
             </ul>
 
             {/* Barra de búsqueda */}
@@ -175,7 +181,10 @@
                     className="search-input"
                 />
                 <button type="submit" className="search-btn" title="Buscar">
-                    🔍
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
                 </button>
             </form>
 
@@ -183,23 +192,81 @@
             <div className="navbar-actions">
                 {/* Carrito */}
                 <Link to="/carrito" className="navbar-cart" title="Ver carrito">
-                <span className="cart-icon">🛒</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="8" cy="21" r="1"></circle>
+                    <circle cx="19" cy="21" r="1"></circle>
+                    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57L20.16 9H5.12"></path>
+                </svg>
                 {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
                 </Link>
 
                 {/* User Profile o Auth Buttons */}
-                {isLoggedIn ? (
-                <div className="user-menu">
-                    <div className="user-avatar" title={user?.name || 'Usuario'}>
-                    <span className="avatar-icon">👤</span>
-                    </div>
+                {isAuthenticated() ? (
+                <div className="user-profile-container" ref={profileMenuRef}>
                     <button 
-                    className="navbar-auth-btn logout-btn" 
-                    onClick={handleAuth}
-                    title="Cerrar sesión"
+                        className="user-profile-button" 
+                        onClick={toggleProfileMenu}
+                        title={`${user?.nombre} ${user?.apellido}`}
                     >
-                    Cerrar Sesión
+                        <div className="user-avatar">
+                            <svg className="avatar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
                     </button>
+                    
+                    {/* Dropdown Menu */}
+                    <div className={`profile-dropdown ${isProfileMenuOpen ? 'active' : ''}`}>
+                        <div className="profile-header">
+                            <div className="profile-avatar-large">
+                                <svg className="avatar-icon-large" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div className="profile-info">
+                                <h3>{user?.nombre} {user?.apellido}</h3>
+                                <p>{user?.email}</p>
+                            </div>
+                        </div>
+                        
+                        <div className="profile-menu">
+                            <button 
+                                className="profile-menu-item"
+                                onClick={() => handleProfileNavigation('/perfil')}
+                            >
+                                <span className="menu-icon">�</span>
+                                Mi Perfil
+                            </button>
+                            
+                            <button 
+                                className="profile-menu-item"
+                                onClick={() => handleProfileNavigation('/mis-eventos')}
+                            >
+                                <span className="menu-icon">🎉</span>
+                                Mis Eventos
+                            </button>
+                            
+                            <button 
+                                className="profile-menu-item"
+                                onClick={() => handleProfileNavigation('/historial')}
+                            >
+                                <span className="menu-icon">�</span>
+                                Historial
+                            </button>
+                            
+                            <div className="profile-divider"></div>
+                            
+                            <button 
+                                className="profile-menu-item logout-item"
+                                onClick={handleAuth}
+                            >
+                                <span className="menu-icon">🚪</span>
+                                Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 ) : (
                 <div className="auth-buttons">
@@ -263,24 +330,6 @@
                 </form>
             </li>
             
-            {/* User Menu Items (si está logueado) */}
-            {isLoggedIn && userMenuItems.length > 0 && (
-                <>
-                <li className="mobile-divider"></li>
-                {userMenuItems.map((item) => (
-                    <li key={item.path} className="mobile-item">
-                    <Link
-                        to={item.path}
-                        className={`mobile-link user-link ${isActiveLink(item.path) ? 'active' : ''}`}
-                        onClick={closeMenu}
-                    >
-                        {item.label}
-                    </Link>
-                    </li>
-                ))}
-                </>
-            )}
-            
             <li className="mobile-divider"></li>
             
             {/* Carrito */}
@@ -291,11 +340,11 @@
             </li>
             
             {/* Auth Actions */}
-            {isLoggedIn ? (
+            {isAuthenticated() ? (
                 <>
                 <li className="mobile-item">
                     <div className="mobile-user-info">
-                    👤 {user?.name || 'Usuario'}
+                    👤 {`${user?.nombre} ${user?.apellido}` || 'Usuario'}
                     </div>
                 </li>
                 <li className="mobile-item">

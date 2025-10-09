@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.models.models import Categoria, Producto, Usuario
+from app.core.auth import hash_password
 from typing import List, Optional
 
 class CategoriasCRUD:
@@ -56,6 +57,40 @@ class ProductosCRUD:
         result = db.execute(query, {"skip": skip, "limit": limit})
         return result.fetchall()
 
+class UsuariosCRUD:
+    def get_by_email(self, db: Session, email: str) -> Optional[Usuario]:
+        """Obtener usuario por email"""
+        return db.query(Usuario).filter(Usuario.email == email).first()
+    
+    def get_by_id(self, db: Session, usuario_id: int) -> Optional[Usuario]:
+        """Obtener usuario por ID"""
+        return db.query(Usuario).filter(Usuario.usuario_id == usuario_id).first()
+    
+    def create_usuario(self, db: Session, usuario_data: dict) -> Usuario:
+        """Crear nuevo usuario"""
+        # Hash de la contraseña
+        hashed_password = hash_password(usuario_data['password'])
+        
+        # Crear usuario con campos separados
+        db_usuario = Usuario(
+            nombre=usuario_data['nombre'],
+            apellido=usuario_data['apellido'],
+            email=usuario_data['email'],
+            password=hashed_password,
+            telefono=usuario_data.get('telefono', ''),
+            direccion=usuario_data.get('direccion', '')
+        )
+        
+        db.add(db_usuario)
+        db.commit()
+        db.refresh(db_usuario)
+        return db_usuario
+    
+    def email_exists(self, db: Session, email: str) -> bool:
+        """Verificar si un email ya existe"""
+        return db.query(Usuario).filter(Usuario.email == email).first() is not None
+
 # Instancias para usar en los endpoints
 categorias_crud = CategoriasCRUD()
 productos_crud = ProductosCRUD()
+usuarios_crud = UsuariosCRUD()

@@ -1,3 +1,14 @@
+"""
+K'ABÉ Rental System - Main Application
+=====================================
+
+Aplicación principal de FastAPI para el sistema de renta de mobiliario.
+Incluye configuración de CORS, middleware, y rutas de la API.
+
+Author: K'ABÉ Development Team
+Version: 1.0.0
+"""
+
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -10,36 +21,44 @@ import uvicorn
 # Crear las tablas en la base de datos (opcional si usas Alembic)
 # models.Base.metadata.create_all(bind=engine)
 
+# Inicializar aplicación FastAPI
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description=settings.DESCRIPTION,
-    debug=settings.DEBUG
+    debug=settings.DEBUG,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
-# Configurar CORS
+# Configurar CORS para desarrollo frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
 # Incluir rutas de la API
 app.include_router(api_router, prefix="/api/v1", tags=["API v1"])
 
+# Endpoints del sistema
 @app.get("/")
 def read_root():
+    """Endpoint raíz con información básica de la API."""
     return {
         "message": "Bienvenido a K'ABÉ Rental System API",
         "version": settings.VERSION,
-        "status": "active"
+        "status": "active",
+        "docs": "/docs",
+        "health": "/health"
     }
 
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
-    """Endpoint para verificar el estado de la API y la conexión a la base de datos"""
+    """Endpoint para verificar el estado de la API y la conexión a la base de datos."""
     try:
         # Intentar hacer una consulta simple para verificar la conexión
         from sqlalchemy import text
@@ -47,29 +66,27 @@ def health_check(db: Session = Depends(get_db)):
         return {
             "status": "healthy",
             "database": "connected",
-            "message": "API funcionando correctamente"
+            "message": "API funcionando correctamente",
+            "timestamp": "2025-10-08"
         }
     except Exception as e:
         return {
             "status": "unhealthy",
             "database": "disconnected",
-            "error": str(e)
+            "error": str(e),
+            "timestamp": "2025-10-08"
         }
 
 @app.get("/test-db")
 def test_database_connection(db: Session = Depends(get_db)):
-    """Endpoint para probar la conexión específica con la base de datos K'ABÉ"""
+    """Endpoint para probar la conexión específica con la base de datos K'ABÉ."""
     try:
         from sqlalchemy import text
-        # Probar consulta a una tabla específica
-        result = db.execute(text("SELECT COUNT(*) as count FROM categorias")).fetchone()
-        categorias_count = result[0] if result else 0
         
-        result = db.execute(text("SELECT COUNT(*) as count FROM productos")).fetchone()
-        productos_count = result[0] if result else 0
-        
-        result = db.execute(text("SELECT COUNT(*) as count FROM usuarios")).fetchone()
-        usuarios_count = result[0] if result else 0
+        # Contar registros en tablas principales
+        categorias_count = db.execute(text("SELECT COUNT(*) as count FROM categorias")).fetchone()[0]
+        productos_count = db.execute(text("SELECT COUNT(*) as count FROM productos")).fetchone()[0]
+        usuarios_count = db.execute(text("SELECT COUNT(*) as count FROM usuarios")).fetchone()[0]
         
         # Verificar estructura de productos
         columns_result = db.execute(text("DESCRIBE productos")).fetchall()
@@ -81,7 +98,7 @@ def test_database_connection(db: Session = Depends(get_db)):
         return {
             "status": "success",
             "message": "Conexión exitosa a la base de datos K'ABÉ",
-            "data": {
+            "statistics": {
                 "categorias": categorias_count,
                 "productos": productos_count,
                 "usuarios": usuarios_count
@@ -96,6 +113,7 @@ def test_database_connection(db: Session = Depends(get_db)):
             "error": str(e)
         }
 
+# Ejecutar servidor si este archivo se ejecuta directamente
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",

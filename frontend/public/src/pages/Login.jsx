@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../styles/pages/Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+  const from = location.state?.from?.pathname || '/';
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -57,17 +61,18 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // TODO: Implementar lógica de login
-      console.log('Datos de login:', formData);
+      await login(formData.email, formData.password);
       
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Login exitoso');
       
-      alert('¡Bienvenido de vuelta a K\'abé!');
+      // Redirigir a la página principal
+      navigate(from, { replace: true });
       
     } catch (error) {
       console.error('Error en el login:', error);
-      setErrors({ general: 'Credenciales incorrectas. Intenta nuevamente.' });
+      setErrors({ 
+        general: error.response?.data?.detail || 'Credenciales incorrectas. Intenta nuevamente.' 
+      });
     } finally {
       setIsLoading(false);
     }

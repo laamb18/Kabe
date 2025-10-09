@@ -72,10 +72,34 @@ class UsuarioBase(BaseModel):
     telefono: Optional[str] = None
     direccion: Optional[str] = None
 
-class Usuario(UsuarioBase):
+class UsuarioCreate(UsuarioBase):
+    password: str
+
+class UsuarioResponse(UsuarioBase):
     usuario_id: int
-    fecha_creacion: datetime
+    fecha_registro: datetime
     fecha_actualizacion: datetime
 
     class Config:
         from_attributes = True
+
+class Usuario(UsuarioBase):
+    usuario_id: int
+    fecha_registro: datetime
+    fecha_actualizacion: datetime
+
+    class Config:
+        from_attributes = True
+
+# Schemas para autenticación
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UsuarioResponse
+
+class MessageResponse(BaseModel):
+    message: str

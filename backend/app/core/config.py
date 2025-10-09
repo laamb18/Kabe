@@ -25,7 +25,27 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
     
     # Configuración CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000", 
+        "http://localhost:5173", 
+        "http://localhost:5174"
+    ]
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Si CORS_ORIGINS viene del .env como string, convertirlo a lista
+        cors_origins_env = os.getenv("CORS_ORIGINS")
+        if cors_origins_env:
+            try:
+                import json
+                self.CORS_ORIGINS = json.loads(cors_origins_env)
+            except:
+                # Si no es JSON válido, usar las origins por defecto
+                self.CORS_ORIGINS = [
+                    "http://localhost:3000", 
+                    "http://localhost:5173", 
+                    "http://localhost:5174"
+                ]
     
     # Configuración del proyecto
     PROJECT_NAME: str = "K'ABÉ Rental System API"

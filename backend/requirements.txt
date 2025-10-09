@@ -1,30 +1,33 @@
-# FastAPI y dependencias principales
+# K'ABÉ Rental System Backend - Dependencies
+# ==========================================
+
+# Core Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
-# Base de datos
+# Database
 sqlalchemy==2.0.23
 pymysql==1.1.0
-cryptography==41.0.7
 alembic==1.12.1
 
-# Configuración y variables de entorno
-pydantic==2.5.0
-pydantic-settings==2.1.0
-python-dotenv==1.0.0
-
-# Seguridad y autenticación
+# Authentication & Security
+cryptography==41.0.7
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
 
-# Utilidades
+# Data Validation
+pydantic==2.12.0
+pydantic-settings==2.11.0
 email-validator==2.1.0
+
+# Configuration
+python-dotenv==1.1.1
 python-dateutil==2.8.2
 
-# Compatible con googletrans (versión específica de httpx)
+# Development & Testing
+requests==2.31.0
 httpx==0.13.3
-
-# Desarrollo y testing 
 pytest==7.4.3
 pytest-asyncio==0.21.1

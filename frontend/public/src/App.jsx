@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import './styles/App.css';
 import Navbar from './components/common/Navbar'; 
 import Footer from './components/common/Footer';
@@ -7,6 +8,9 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Products from './pages/Products';
 import Packages from './pages/Packages';
+import Profile from './pages/Profile';
+import MisEventos from './pages/MisEventos';
+import Historial from './pages/Historial';
 
 function App() {
   const location = useLocation();
@@ -16,13 +20,16 @@ function App() {
   const isAuthPage = authPages.includes(location.pathname);
 
   return (
-    <>
+    <AuthProvider>
       {!isAuthPage && <Navbar/>}
       <main className={isAuthPage ? 'auth-main' : 'main'}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/registro" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/perfil" element={<Profile />} />
+          <Route path="/mis-eventos" element={<MisEventos />} />
+          <Route path="/historial" element={<Historial />} />
           <Route path="/paquetes" element={<Packages />} />
           <Route path="/categorias" element={<Packages />} />
           <Route path="/productos" element={<Products />} />
@@ -43,7 +50,7 @@ function App() {
         </Routes>
       </main>
       {!isAuthPage && <Footer/>}
-    </>
+    </AuthProvider>
   );
 }
 

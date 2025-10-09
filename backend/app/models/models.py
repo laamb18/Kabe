@@ -54,7 +54,7 @@ class Usuario(Base):
     password = Column(String(255), nullable=False)
     telefono = Column(String(20))
     direccion = Column(Text)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    fecha_registro = Column(DateTime(timezone=True), server_default=func.now())
     fecha_actualizacion = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 # Modelo Administrador (coincide con tu BD)

@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '../services/api';
 import '../styles/pages/Register.css';
 
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: '',
+    nombre: '',
+    apellido: '',
     email: '',
     password: '',
     confirmPassword: '',
-    address: '',
-    phone: '',
+    direccion: '',
+    telefono: '',
     acceptTerms: false
   });
 
@@ -36,8 +38,12 @@ const Register = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'El nombre completo es requerido';
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = 'El nombre es requerido';
+    }
+
+    if (!formData.apellido.trim()) {
+      newErrors.apellido = 'El apellido es requerido';
     }
 
     if (!formData.email.trim()) {
@@ -56,12 +62,12 @@ const Register = () => {
       newErrors.confirmPassword = 'Las contraseñas no coinciden';
     }
 
-    if (!formData.address.trim()) {
-      newErrors.address = 'La dirección es requerida';
+    if (!formData.direccion.trim()) {
+      newErrors.direccion = 'La dirección es requerida';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es requerido';
+    if (!formData.telefono.trim()) {
+      newErrors.telefono = 'El teléfono es requerido';
     }
 
     if (!formData.acceptTerms) {
@@ -81,19 +87,55 @@ const Register = () => {
     }
 
     setIsLoading(true);
+    setErrors({});
     
     try {
-      // TODO: Implementar lógica de registro
-      console.log('Datos de registro:', formData);
+      // Preparar datos para el backend
+      const userData = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        email: formData.email,
+        password: formData.password,
+        telefono: formData.telefono,
+        direccion: formData.direccion
+      };
+
+      // Llamar al servicio de registro
+      const response = await authService.register(userData);
       
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Usuario registrado exitosamente:', response);
       
-      alert('¡Registro exitoso! Bienvenido a K\'abé');
+      // Mostrar mensaje de éxito
+      alert(`¡Registro exitoso! Bienvenido ${response.nombre} ${response.apellido} a K'abé`);
+      
+      // Redirigir al login
+      navigate('/login', { 
+        state: { 
+          message: 'Registro exitoso. Ahora puedes iniciar sesión.',
+          email: formData.email 
+        } 
+      });
       
     } catch (error) {
       console.error('Error en el registro:', error);
-      alert('Error al registrar usuario. Intenta nuevamente.');
+      
+      // Manejar errores específicos
+      if (error.message.includes('El email ya está registrado')) {
+        setErrors({ email: 'Este email ya está registrado. Intenta con otro.' });
+      } else if (error.message.includes('422')) {
+        setErrors({ general: 'Los datos proporcionados no son válidos. Verifica todos los campos.' });
+      } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+        setErrors({ general: 'Error interno del servidor. Por favor, intenta más tarde.' });
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        setErrors({ general: 'No se puede conectar al servidor. Verifica tu conexión a internet.' });
+      } else if (error.message.includes('CORS')) {
+        setErrors({ general: 'Error de configuración del servidor. Contacta al administrador.' });
+      } else {
+        // Para cualquier otro error, mostrar un mensaje genérico pero útil
+        setErrors({ 
+          general: `Error al crear la cuenta: ${error.message || 'Por favor, intenta nuevamente.'}` 
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -146,18 +188,47 @@ const Register = () => {
             </div>
 
             <form className="register-form" onSubmit={handleSubmit}>
+              {/* Mostrar error general si existe */}
+              {errors.general && (
+                <div className="general-error">
+                  <div className="error-icon">⚠️</div>
+                  <span className="error-message">{errors.general}</span>
+                  <button 
+                    type="button" 
+                    className="retry-button"
+                    onClick={() => setErrors({})}
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              )}
+
               <div className="form-group">
-                <label htmlFor="fullName">Nombre Completo</label>
+                <label htmlFor="nombre">Nombre</label>
                 <input
                   type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
+                  id="nombre"
+                  name="nombre"
+                  value={formData.nombre}
                   onChange={handleInputChange}
-                  className={errors.fullName ? 'error' : ''}
-                  placeholder="Tu nombre completo"
+                  className={errors.nombre ? 'error' : ''}
+                  placeholder="Tu nombre"
                 />
-                {errors.fullName && <span className="error-message">{errors.fullName}</span>}
+                {errors.nombre && <span className="error-message">{errors.nombre}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="apellido">Apellido</label>
+                <input
+                  type="text"
+                  id="apellido"
+                  name="apellido"
+                  value={formData.apellido}
+                  onChange={handleInputChange}
+                  className={errors.apellido ? 'error' : ''}
+                  placeholder="Tu apellido"
+                />
+                {errors.apellido && <span className="error-message">{errors.apellido}</span>}
               </div>
 
               <div className="form-group">
@@ -203,31 +274,31 @@ const Register = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="address">Dirección</label>
+                <label htmlFor="direccion">Dirección</label>
                 <input
                   type="text"
-                  id="address"
-                  name="address"
-                  value={formData.address}
+                  id="direccion"
+                  name="direccion"
+                  value={formData.direccion}
                   onChange={handleInputChange}
-                  className={errors.address ? 'error' : ''}
+                  className={errors.direccion ? 'error' : ''}
                   placeholder="Tu dirección completa"
                 />
-                {errors.address && <span className="error-message">{errors.address}</span>}
+                {errors.direccion && <span className="error-message">{errors.direccion}</span>}
               </div>
 
               <div className="form-group">
-                <label htmlFor="phone">Teléfono</label>
+                <label htmlFor="telefono">Teléfono</label>
                 <input
                   type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
+                  id="telefono"
+                  name="telefono"
+                  value={formData.telefono}
                   onChange={handleInputChange}
-                  className={errors.phone ? 'error' : ''}
+                  className={errors.telefono ? 'error' : ''}
                   placeholder="(555) 123-4567"
                 />
-                {errors.phone && <span className="error-message">{errors.phone}</span>}
+                {errors.telefono && <span className="error-message">{errors.telefono}</span>}
               </div>
 
               <div className="form-group checkbox-group">

@@ -195,9 +195,12 @@
 }
 
 .error-message {
-  color: #e74c3c;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+  line-height: 1.3;
+  word-wrap: break-word;
 }
 
 /* Checkbox personalizado */
@@ -447,6 +450,66 @@
 .link:focus {
   outline: 2px solid #AB4B02;
   outline-offset: 2px;
+}
+
+/* Error general */
+.general-error {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #f87171;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(248, 113, 113, 0.1);
+  animation: slideInDown 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.general-error .error-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.general-error .error-message {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+  max-width: 100%;
+  display: block;
+  flex: 1;
+  text-align: left;
+}
+
+.general-error .retry-button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.general-error .retry-button:hover {
+  background: #b91c1c;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Mejoras visuales */
