@@ -91,6 +91,23 @@ class Usuario(UsuarioBase):
     class Config:
         from_attributes = True
 
+# Schema para Administrador
+class AdministradorBase(BaseModel):
+    nombre: str
+    apellido: str
+    email: str
+
+class AdministradorCreate(AdministradorBase):
+    password: str
+
+class AdministradorResponse(AdministradorBase):
+    admin_id: int
+    fecha_creacion: datetime
+    fecha_actualizacion: datetime
+
+    class Config:
+        from_attributes = True
+
 # Schemas para autenticación
 class LoginRequest(BaseModel):
     email: str
@@ -100,6 +117,12 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str
     user: UsuarioResponse
+
+class AdminLoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    admin: AdministradorResponse
+    is_admin: bool = True
 
 class MessageResponse(BaseModel):
     message: str

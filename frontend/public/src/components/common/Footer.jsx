@@ -138,6 +138,8 @@ const Footer = () => {
               <a href="#" className="legal-link">Términos de Servicio</a>
               <span className="separator">|</span>
               <a href="#" className="legal-link">Cookies</a>
+              <span className="separator">|</span>
+              <a href="/admin/login" className="legal-link admin-link" title="Panel de Administración">Admin</a>
             </div>
           </div>
         </div>

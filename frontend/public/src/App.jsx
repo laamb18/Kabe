@@ -11,18 +11,26 @@ import Packages from './pages/Packages';
 import Profile from './pages/Profile';
 import MisEventos from './pages/MisEventos';
 import Historial from './pages/Historial';
+// Importaciones para administradores
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminProducts from './pages/admin/AdminProducts';
+import AdminCategories from './pages/admin/AdminCategories';
+import AdminUsers from './pages/admin/AdminUsers';
 
 function App() {
   const location = useLocation();
   
   // Páginas que no deben mostrar navbar y footer
   const authPages = ['/registro', '/login'];
+  const adminPages = ['/admin/login', '/admin/dashboard', '/admin/productos', '/admin/categorias', '/admin/usuarios'];
   const isAuthPage = authPages.includes(location.pathname);
+  const isAdminPage = adminPages.some(page => location.pathname.startsWith(page.split('/').slice(0, 3).join('/')));
 
   return (
     <AuthProvider>
-      {!isAuthPage && <Navbar/>}
-      <main className={isAuthPage ? 'auth-main' : 'main'}>
+      {!isAuthPage && !isAdminPage && <Navbar/>}
+      <main className={isAuthPage || isAdminPage ? 'auth-main' : 'main'}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/registro" element={<Register />} />
@@ -33,6 +41,14 @@ function App() {
           <Route path="/paquetes" element={<Packages />} />
           <Route path="/categorias" element={<Packages />} />
           <Route path="/productos" element={<Products />} />
+          
+          {/* Rutas de administrador */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/productos" element={<AdminProducts />} />
+          <Route path="/admin/categorias" element={<AdminCategories />} />
+          <Route path="/admin/usuarios" element={<AdminUsers />} />
+          
           {/* Rutas adicionales que puedes agregar después */}
           <Route path="/carrito" element={
             <div className="coming-soon">
@@ -49,7 +65,7 @@ function App() {
           } />
         </Routes>
       </main>
-      {!isAuthPage && <Footer/>}
+      {!isAuthPage && !isAdminPage && <Footer/>}
     </AuthProvider>
   );
 }
