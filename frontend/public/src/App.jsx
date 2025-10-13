@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Products from './pages/Products';
 import Packages from './pages/Packages';
+import PackageDetail from './pages/PackageDetail';
 import Profile from './pages/Profile';
 import MisEventos from './pages/MisEventos';
 import Historial from './pages/Historial';
@@ -16,6 +17,7 @@ import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminCategories from './pages/admin/AdminCategories';
+import AdminPackages from './pages/admin/AdminPackages';
 import AdminUsers from './pages/admin/AdminUsers';
 
 function App() {
@@ -23,7 +25,7 @@ function App() {
   
   // Páginas que no deben mostrar navbar y footer
   const authPages = ['/registro', '/login'];
-  const adminPages = ['/admin/login', '/admin/dashboard', '/admin/productos', '/admin/categorias', '/admin/usuarios'];
+  const adminPages = ['/admin/login', '/admin/dashboard', '/admin/productos', '/admin/categorias', '/admin/paquetes', '/admin/usuarios'];
   const isAuthPage = authPages.includes(location.pathname);
   const isAdminPage = adminPages.some(page => location.pathname.startsWith(page.split('/').slice(0, 3).join('/')));
 
@@ -39,6 +41,7 @@ function App() {
           <Route path="/mis-eventos" element={<MisEventos />} />
           <Route path="/historial" element={<Historial />} />
           <Route path="/paquetes" element={<Packages />} />
+          <Route path="/paquetes/:id" element={<PackageDetail />} />
           <Route path="/categorias" element={<Packages />} />
           <Route path="/productos" element={<Products />} />
           
@@ -47,6 +50,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/productos" element={<AdminProducts />} />
           <Route path="/admin/categorias" element={<AdminCategories />} />
+          <Route path="/admin/paquetes" element={<AdminPackages />} />
           <Route path="/admin/usuarios" element={<AdminUsers />} />
           
           {/* Rutas adicionales que puedes agregar después */}

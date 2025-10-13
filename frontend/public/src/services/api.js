@@ -129,6 +129,30 @@ export const adminProductsService = {
   }, true),
 };
 
+// Servicios para administradores - Gestión de paquetes
+export const adminPackagesService = {
+  // Obtener todos los paquetes (incluyendo inactivos)
+  getAll: (skip = 0, limit = 100) => 
+    authenticatedRequest(`/admin/paquetes?skip=${skip}&limit=${limit}`, {}, true),
+  
+  // Crear paquete
+  create: (packageData) => authenticatedRequest('/admin/paquetes', {
+    method: 'POST',
+    body: JSON.stringify(packageData),
+  }, true),
+  
+  // Actualizar paquete
+  update: (packageId, packageData) => authenticatedRequest(`/admin/paquetes/${packageId}`, {
+    method: 'PUT',
+    body: JSON.stringify(packageData),
+  }, true),
+  
+  // Eliminar paquete
+  delete: (packageId) => authenticatedRequest(`/admin/paquetes/${packageId}`, {
+    method: 'DELETE',
+  }, true),
+};
+
 // Servicios para administradores - Gestión de categorías
 export const adminCategoriesService = {
   // Obtener todas las categorías (incluyendo inactivas)
@@ -151,6 +175,18 @@ export const adminCategoriesService = {
   delete: (categoryId) => authenticatedRequest(`/admin/categorias/${categoryId}`, {
     method: 'DELETE',
   }, true),
+};
+
+// Servicios para paquetes
+export const paquetesService = {
+  // Obtener todos los paquetes
+  getAll: () => apiRequest('/paquetes'),
+  
+  // Obtener paquete por ID
+  getById: (id) => apiRequest(`/paquetes/${id}`),
+  
+  // Obtener paquetes activos con información detallada
+  getActivos: () => apiRequest('/paquetes/activos'),
 };
 
 // Servicios para categorías

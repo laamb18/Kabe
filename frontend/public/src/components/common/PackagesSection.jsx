@@ -1,38 +1,38 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import PackageCard from './PackageCard';
-import { categoriasService } from '../../services/api';
+import { paquetesService } from '../../services/api';
 import '../../styles/components/common/PackagesSection.css';
 
 const PackagesSection = () => {
   const navigate = useNavigate();
-  const [categorias, setCategorias] = useState([]);
+  const [paquetes, setPaquetes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadCategorias = async () => {
+    const loadPaquetes = async () => {
       try {
         setLoading(true);
-        const data = await categoriasService.getAll();
-        setCategorias(data);
+        const data = await paquetesService.getAll();
+        setPaquetes(data);
       } catch (err) {
         setError('Error al cargar los paquetes');
-        console.error('Error loading categorias:', err);
+        console.error('Error loading paquetes:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadCategorias();
+    loadPaquetes();
   }, []);
 
   const handleVerMas = () => {
     navigate('/paquetes');
   };
 
-  const handleCategoryClick = (categoriaId) => {
-    navigate(`/productos?categoria=${categoriaId}`);
+  const handlePackageClick = (paqueteId) => {
+    navigate(`/paquetes/${paqueteId}`);
   };
 
   if (loading) {
@@ -63,16 +63,20 @@ const PackagesSection = () => {
         <h2 className="packages-title">Nuestros Paquetes</h2>
         
         <div className="packages-grid">
-          {categorias.map((categoria) => (
+          {paquetes.map((paquete) => (
             <PackageCard 
-              key={categoria.categoria_id} 
+              key={paquete.paquete_id} 
               packageInfo={{
-                id: categoria.categoria_id,
-                name: categoria.nombre,
-                imageUrl: categoria.imagen_url || "/images/silla.jpg",
-                shortDescription: categoria.descripcion || `Explora nuestra selección de ${categoria.nombre.toLowerCase()}`
+                id: paquete.paquete_id,
+                name: paquete.nombre,
+                imageUrl: paquete.imagen_url || "/images/package-default.jpg",
+                shortDescription: paquete.descripcion || `${paquete.nombre} - Paquete completo`,
+                price: paquete.precio_por_dia,
+                discount: paquete.descuento_porcentaje,
+                capacity: paquete.capacidad_personas,
+                code: paquete.codigo_paquete
               }}
-              onClick={handleCategoryClick}
+              onClick={handlePackageClick}
             />
           ))}
         </div>

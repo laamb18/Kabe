@@ -118,10 +118,10 @@ const AdminDashboard = () => {
         </div>
         
         <div className="stat-card">
-          <div className="stat-icon">C</div>
+          <div className="stat-icon">📦</div>
           <div className="stat-content">
-            <h3>Total Categorías</h3>
-            <p className="stat-number">{dashboardData?.stats_generales?.total_categorias || 0}</p>
+            <h3>Total Paquetes</h3>
+            <p className="stat-number">{dashboardData?.stats_generales?.total_paquetes || 0}</p>
           </div>
         </div>
         
@@ -239,11 +239,11 @@ const AdminDashboard = () => {
           </button>
           
           <button 
-            className="action-button categories"
-            onClick={() => navigate('/admin/categorias')}
+            className="action-button packages"
+            onClick={() => navigate('/admin/paquetes')}
           >
-            <span className="action-icon">C</span>
-            <span>Gestionar Categorías</span>
+            <span className="action-icon">📦</span>
+            <span>Gestionar Paquetes</span>
           </button>
           
           <button 

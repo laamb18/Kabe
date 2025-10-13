@@ -64,6 +64,25 @@ class ProductoConCategoria(BaseModel):
     class Config:
         from_attributes = True
 
+# Schema para Paquete
+class PaqueteBase(BaseModel):
+    codigo_paquete: str
+    nombre: str
+    descripcion: Optional[str] = None
+    precio_por_dia: float
+    descuento_porcentaje: Optional[float] = 0.00
+    imagen_url: Optional[str] = None
+    capacidad_personas: Optional[int] = None
+    activo: bool = True
+
+class Paquete(PaqueteBase):
+    paquete_id: int
+    fecha_creacion: datetime
+    fecha_actualizacion: datetime
+
+    class Config:
+        from_attributes = True
+
 # Schema para Usuario
 class UsuarioBase(BaseModel):
     nombre: str

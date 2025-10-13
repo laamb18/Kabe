@@ -210,12 +210,22 @@
   flex: 1;
   outline: none;
   font-weight: 500;
+  transition: none;
 }
 
 .search-input::placeholder {
   color: #999;
   font-weight: 400;
+  transition: none;
+  border: none;
 }
+
+.search-input:focus {
+  outline: none;
+  border: none;
+  transition: none;
+}
+
 
 .search-btn {
   background: #22A89D;

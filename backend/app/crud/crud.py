@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.models.models import Categoria, Producto, Usuario, Administrador
+from app.models.models import Categoria, Producto, Usuario, Administrador, Paquete
 from app.core.auth import hash_password
 from typing import List, Optional
 
@@ -71,11 +71,15 @@ class ProductosCRUD:
     
     def create_producto(self, db: Session, producto_data: dict) -> Producto:
         """Crear nuevo producto"""
-        db_producto = Producto(**producto_data)
-        db.add(db_producto)
-        db.commit()
-        db.refresh(db_producto)
-        return db_producto
+        try:
+            db_producto = Producto(**producto_data)
+            db.add(db_producto)
+            db.commit()
+            db.refresh(db_producto)
+            return db_producto
+        except Exception as e:
+            db.rollback()
+            raise e
     
     def update_producto(self, db: Session, producto_id: int, producto_data: dict) -> Optional[Producto]:
         """Actualizar producto"""
@@ -83,23 +87,38 @@ class ProductosCRUD:
         if not db_producto:
             return None
         
+        # Actualizar solo los campos que se proporcionan
         for key, value in producto_data.items():
-            if hasattr(db_producto, key):
-                setattr(db_producto, key, value)
+            if hasattr(db_producto, key) and value is not None:
+                # Manejar campos especiales
+                if key == 'especificaciones' and isinstance(value, str):
+                    # Si especificaciones viene como string, mantenerlo como string
+                    setattr(db_producto, key, value)
+                else:
+                    setattr(db_producto, key, value)
         
-        db.commit()
-        db.refresh(db_producto)
-        return db_producto
+        try:
+            db.commit()
+            db.refresh(db_producto)
+            return db_producto
+        except Exception as e:
+            db.rollback()
+            raise e
     
     def delete_producto(self, db: Session, producto_id: int) -> bool:
-        """Eliminar producto (cambiar estado)"""
+        """Eliminar producto (cambiar estado a inactivo)"""
         db_producto = self.get_by_id(db, producto_id)
         if not db_producto:
             return False
         
-        db_producto.estado = "inactivo"
-        db.commit()
-        return True
+        try:
+            # Cambiar estado a inactivo en lugar de eliminar físicamente
+            db_producto.estado = "inactivo"
+            db.commit()
+            return True
+        except Exception as e:
+            db.rollback()
+            raise e
     
     def get_productos_con_categoria(self, db: Session, skip: int = 0, limit: int = 100):
         """Obtener productos con información de categoría"""
@@ -247,11 +266,12 @@ class AdministradoresCRUD:
             LIMIT 10
         """)
         
-        # Estadísticas generales
+        # Estadísticas generales incluyendo paquetes
         stats_generales = text("""
             SELECT 
                 (SELECT COUNT(*) FROM productos WHERE estado = 'disponible') as total_productos,
                 (SELECT COUNT(*) FROM categorias WHERE activo = 1) as total_categorias,
+                (SELECT COUNT(*) FROM paquetes WHERE activo = 1) as total_paquetes,
                 (SELECT COUNT(*) FROM usuarios) as total_usuarios,
                 (SELECT SUM(stock_total - stock_disponible) FROM productos) as total_pedidos
         """)
@@ -262,8 +282,68 @@ class AdministradoresCRUD:
             'stats_generales': db.execute(stats_generales).fetchone()
         }
 
+class PaquetesCRUD:
+    def get_all(self, db: Session, skip: int = 0, limit: int = 100) -> List[Paquete]:
+        """Obtener todos los paquetes activos"""
+        return db.query(Paquete).filter(Paquete.activo == True).offset(skip).limit(limit).all()
+    
+    def get_all_admin(self, db: Session, skip: int = 0, limit: int = 100) -> List[Paquete]:
+        """Obtener todos los paquetes (para administrador)"""
+        return db.query(Paquete).offset(skip).limit(limit).all()
+    
+    def get_by_id(self, db: Session, paquete_id: int) -> Optional[Paquete]:
+        """Obtener paquete por ID"""
+        return db.query(Paquete).filter(Paquete.paquete_id == paquete_id).first()
+    
+    def create_paquete(self, db: Session, paquete_data: dict) -> Paquete:
+        """Crear nuevo paquete"""
+        try:
+            db_paquete = Paquete(**paquete_data)
+            db.add(db_paquete)
+            db.commit()
+            db.refresh(db_paquete)
+            return db_paquete
+        except Exception as e:
+            db.rollback()
+            raise e
+    
+    def update_paquete(self, db: Session, paquete_id: int, paquete_data: dict) -> Optional[Paquete]:
+        """Actualizar paquete"""
+        db_paquete = self.get_by_id(db, paquete_id)
+        if not db_paquete:
+            return None
+        
+        # Actualizar solo los campos que se proporcionan
+        for key, value in paquete_data.items():
+            if hasattr(db_paquete, key) and value is not None:
+                setattr(db_paquete, key, value)
+        
+        try:
+            db.commit()
+            db.refresh(db_paquete)
+            return db_paquete
+        except Exception as e:
+            db.rollback()
+            raise e
+    
+    def delete_paquete(self, db: Session, paquete_id: int) -> bool:
+        """Eliminar paquete (cambiar estado a inactivo)"""
+        db_paquete = self.get_by_id(db, paquete_id)
+        if not db_paquete:
+            return False
+        
+        try:
+            # Cambiar estado a inactivo en lugar de eliminar físicamente
+            db_paquete.activo = False
+            db.commit()
+            return True
+        except Exception as e:
+            db.rollback()
+            raise e
+
 # Instancias para usar en los endpoints
 categorias_crud = CategoriasCRUD()
 productos_crud = ProductosCRUD()
 usuarios_crud = UsuariosCRUD()
 administradores_crud = AdministradoresCRUD()
+paquetes_crud = PaquetesCRUD()

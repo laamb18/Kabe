@@ -111,11 +111,53 @@
 
 .package-card-footer {
   margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
+}
+
+.package-card-code {
+  margin-bottom: 1rem;
+}
+
+.package-code-label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
+  background: var(--light-gray);
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.package-card-pricing {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.package-card-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-orange);
+}
+
+.package-card-original-price {
+  font-size: 0.9rem;
+  color: #999;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.package-card-discount {
+  font-size: 0.8rem;
+  background: rgba(171, 75, 2, 0.1);
+  color: var(--primary-orange);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid rgba(171, 75, 2, 0.2);
 }
 
 .package-card-info {
@@ -123,14 +165,14 @@
   align-items: center;
 }
 
-.package-card-label {
+.package-card-capacity {
   font-size: 0.85rem;
-  color: var(--primary-orange);
+  color: var(--primary-teal);
   font-weight: 600;
-  background: rgba(171, 75, 2, 0.1);
+  background: rgba(34, 168, 157, 0.1);
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  border: 1px solid rgba(171, 75, 2, 0.2);
+  border: 1px solid rgba(34, 168, 157, 0.2);
 }
 
 .package-card-actions {
@@ -232,9 +274,19 @@
   }
   
   .package-card-footer {
-    flex-direction: column;
-    align-items: flex-start;
     gap: 0.5rem;
+  }
+  
+  .package-card-pricing {
+    margin-bottom: 0.5rem;
+  }
+  
+  .package-card-price {
+    font-size: 1rem;
+  }
+  
+  .package-card-original-price {
+    font-size: 0.85rem;
   }
 }
 

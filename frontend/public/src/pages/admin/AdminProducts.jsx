@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAuthService, adminProductsService, adminCategoriesService } from '../../services/api';
+import { showSuccessMessage, showErrorMessage } from '../../utils/notifications';
 import '../../styles/pages/AdminProducts.css';
 
 const AdminProducts = () => {
@@ -67,8 +68,38 @@ const AdminProducts = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // Limpiar errores anteriores
     
     try {
+      // Validaciones básicas
+      if (!formData.categoria_id || !formData.codigo_producto || !formData.nombre || !formData.precio_por_dia) {
+        const errorMsg = 'Por favor completa todos los campos requeridos';
+        setError(errorMsg);
+        showErrorMessage(errorMsg);
+        return;
+      }
+
+      if (parseFloat(formData.precio_por_dia) <= 0) {
+        const errorMsg = 'El precio por día debe ser mayor a 0';
+        setError(errorMsg);
+        showErrorMessage(errorMsg);
+        return;
+      }
+
+      if (parseInt(formData.stock_total) < 0 || parseInt(formData.stock_disponible) < 0) {
+        const errorMsg = 'El stock no puede ser negativo';
+        setError(errorMsg);
+        showErrorMessage(errorMsg);
+        return;
+      }
+
+      if (parseInt(formData.stock_disponible) > parseInt(formData.stock_total)) {
+        const errorMsg = 'El stock disponible no puede ser mayor al stock total';
+        setError(errorMsg);
+        showErrorMessage(errorMsg);
+        return;
+      }
+
       const productData = {
         ...formData,
         categoria_id: parseInt(formData.categoria_id),
@@ -76,26 +107,36 @@ const AdminProducts = () => {
         stock_total: parseInt(formData.stock_total),
         stock_disponible: parseInt(formData.stock_disponible),
         peso: formData.peso ? parseFloat(formData.peso) : null,
-        deposito_cantidad: formData.deposito_cantidad ? parseFloat(formData.deposito_cantidad) : null
+        deposito_cantidad: formData.deposito_cantidad ? parseFloat(formData.deposito_cantidad) : null,
+        // Asegurar que especificaciones sea string si está vacío
+        especificaciones: formData.especificaciones || null
       };
 
       if (editingProduct) {
         await adminProductsService.update(editingProduct.producto_id, productData);
+        showSuccessMessage(`Producto "${formData.nombre}" actualizado exitosamente`);
       } else {
         await adminProductsService.create(productData);
+        showSuccessMessage(`Producto "${formData.nombre}" creado exitosamente`);
       }
 
       setShowModal(false);
       setEditingProduct(null);
       resetForm();
-      loadData();
+      setError(''); // Limpiar error en caso de éxito
+      await loadData(); // Usar await para asegurar que se actualice
     } catch (err) {
-      setError(err.message || 'Error al guardar producto');
+      console.error('Error al guardar producto:', err);
+      const errorMsg = err.message || 'Error al guardar producto';
+      setError(errorMsg);
+      showErrorMessage(errorMsg);
     }
   };
 
   const handleEdit = (product) => {
     setEditingProduct(product);
+    setError(''); // Limpiar errores anteriores
+    
     setFormData({
       categoria_id: product.categoria_id.toString(),
       codigo_producto: product.codigo_producto,
@@ -109,22 +150,33 @@ const AdminProducts = () => {
       dimensiones: product.dimensiones || '',
       peso: product.peso ? product.peso.toString() : '',
       imagen_url: product.imagen_url || '',
-      requiere_deposito: product.requiere_deposito,
+      requiere_deposito: Boolean(product.requiere_deposito),
       deposito_cantidad: product.deposito_cantidad ? product.deposito_cantidad.toString() : ''
     });
     setShowModal(true);
   };
 
-  const handleDelete = async (productId) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+  const handleDelete = async (product) => {
+    const confirmMessage = `¿Estás seguro de que quieres eliminar el producto "${product.nombre}"?\n\nCódigo: ${product.codigo_producto}\nEsta acción cambiará el estado del producto a "inactivo".`;
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
     try {
-      await adminProductsService.delete(productId);
-      loadData();
+      setError(''); // Limpiar errores anteriores
+      const response = await adminProductsService.delete(product.producto_id);
+      
+      // Mostrar mensaje de éxito
+      const successMessage = response.message || `Producto "${product.nombre}" eliminado exitosamente`;
+      showSuccessMessage(successMessage);
+      
+      await loadData(); // Recargar la lista de productos
     } catch (err) {
-      setError(err.message || 'Error al eliminar producto');
+      console.error('Error al eliminar producto:', err);
+      const errorMsg = err.message || 'Error al eliminar producto';
+      setError(errorMsg);
+      showErrorMessage(errorMsg);
     }
   };
 
@@ -188,9 +240,11 @@ const AdminProducts = () => {
 
       {error && (
         <div className="error-message">
-          <span className="error-icon">!</span>
-          {error}
-          <button onClick={() => setError('')} className="close-error">×</button>
+          <div>
+            <span className="error-icon">⚠️</span>
+            {error}
+            <button onClick={() => setError('')} className="close-error">×</button>
+          </div>
         </div>
       )}
 
@@ -236,7 +290,7 @@ const AdminProducts = () => {
                     Editar
                   </button>
                   <button 
-                    onClick={() => handleDelete(product.producto_id)}
+                    onClick={() => handleDelete(product)}
                     className="delete-button"
                   >
                     Eliminar

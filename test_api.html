@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Packages API</title>
+</head>
+<body>
+    <h1>Test de API de Paquetes</h1>
+    <div id="results"></div>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:8001/api/v1';
+        const resultsDiv = document.getElementById('results');
+        
+        function showResult(message, isError = false) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            p.style.color = isError ? 'red' : 'green';
+            resultsDiv.appendChild(p);
+        }
+        
+        async function testConnection() {
+            try {
+                showResult('🔍 Probando conexión al servidor...');
+                
+                // Test 1: Endpoint público de paquetes
+                const response1 = await fetch(`${API_BASE_URL}/paquetes`);
+                if (response1.ok) {
+                    const data1 = await response1.json();
+                    showResult(`✅ Endpoint público funciona. Paquetes encontrados: ${data1.length}`);
+                    console.log('Paquetes públicos:', data1);
+                } else {
+                    showResult(`❌ Error en endpoint público: ${response1.status}`, true);
+                }
+                
+                // Test 2: Endpoint de admin (sin autenticación - debe dar 401)
+                const response2 = await fetch(`${API_BASE_URL}/admin/paquetes`);
+                if (response2.status === 401) {
+                    showResult('✅ Endpoint de admin funciona (401 sin auth es correcto)');
+                } else {
+                    showResult(`❌ Endpoint admin inesperado: ${response2.status}`, true);
+                }
+                
+            } catch (error) {
+                showResult(`❌ Error de conexión: ${error.message}`, true);
+                console.error('Error:', error);
+            }
+        }
+        
+        // Ejecutar al cargar la página
+        testConnection();
+    </script>
+</body>
+</html>

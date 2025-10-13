@@ -69,18 +69,18 @@ class Administrador(Base):
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
     fecha_actualizacion = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-# Modelo Paquete (coincide con tu BD)
+# Modelo Paquete (coincide exactamente con tu BD)
 class Paquete(Base):
     __tablename__ = "paquetes"
 
     paquete_id = Column(Integer, primary_key=True, index=True)
-    codigo = Column(String(50), unique=True, nullable=False)
-    nombre = Column(String(200), nullable=False, index=True)
+    codigo_paquete = Column(String(50), unique=True, nullable=False)
+    nombre = Column(String(200), nullable=False)
     descripcion = Column(Text)
-    precio_por_dia = Column(Numeric(12, 2), nullable=False, index=True)
+    precio_por_dia = Column(Numeric(10, 2), nullable=False, index=True)
     descuento_porcentaje = Column(Numeric(5, 2), default=0.00)
     imagen_url = Column(String(500))
-    personas_sugeridas = Column(Integer)
+    capacidad_personas = Column(Integer, index=True)
     activo = Column(Boolean, default=True, index=True)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
     fecha_actualizacion = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

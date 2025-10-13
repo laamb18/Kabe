@@ -6,12 +6,12 @@ from app.core.database import get_db
 from app.core.auth import authenticate_user, authenticate_admin, create_access_token, get_current_user, get_current_admin
 from app.core.config import settings
 from app.schemas.schemas import (
-    Categoria, Producto, ProductoConCategoria, 
+    Categoria, Producto, ProductoConCategoria, Paquete,
     UsuarioCreate, UsuarioResponse, LoginRequest, LoginResponse, MessageResponse,
     AdministradorCreate, AdministradorResponse, AdminLoginResponse
 )
-from app.models.models import Usuario, Administrador
-from app.crud.crud import categorias_crud, productos_crud, usuarios_crud, administradores_crud
+from app.models.models import Usuario, Administrador, Producto, Paquete
+from app.crud.crud import categorias_crud, productos_crud, usuarios_crud, administradores_crud, paquetes_crud
 
 router = APIRouter()
 
@@ -311,8 +311,9 @@ def get_admin_dashboard(current_admin: Administrador = Depends(get_current_admin
             "stats_generales": {
                 "total_productos": stats['stats_generales'][0] if stats['stats_generales'] else 0,
                 "total_categorias": stats['stats_generales'][1] if stats['stats_generales'] else 0,
-                "total_usuarios": stats['stats_generales'][2] if stats['stats_generales'] else 0,
-                "total_pedidos": stats['stats_generales'][3] if stats['stats_generales'] else 0
+                "total_paquetes": stats['stats_generales'][2] if stats['stats_generales'] else 0,
+                "total_usuarios": stats['stats_generales'][3] if stats['stats_generales'] else 0,
+                "total_pedidos": stats['stats_generales'][4] if stats['stats_generales'] else 0
             },
             "productos_populares": [
                 {
@@ -427,7 +428,14 @@ def get_all_productos_admin(
                 "stock_total": p.stock_total,
                 "stock_disponible": p.stock_disponible,
                 "estado": p.estado,
-                "imagen_url": p.imagen_url
+                "especificaciones": p.especificaciones,
+                "dimensiones": p.dimensiones,
+                "peso": float(p.peso) if p.peso else None,
+                "imagen_url": p.imagen_url,
+                "requiere_deposito": bool(p.requiere_deposito),
+                "deposito_cantidad": float(p.deposito_cantidad) if p.deposito_cantidad else None,
+                "fecha_creacion": p.fecha_creacion.isoformat() if p.fecha_creacion else None,
+                "fecha_actualizacion": p.fecha_actualizacion.isoformat() if p.fecha_actualizacion else None
             } for p in productos
         ]
     except Exception as e:
@@ -441,6 +449,35 @@ def create_producto(
 ):
     """Crear nuevo producto (solo administradores)"""
     try:
+        # Validaciones de datos requeridos
+        required_fields = ['categoria_id', 'codigo_producto', 'nombre', 'precio_por_dia', 'stock_total', 'stock_disponible']
+        for field in required_fields:
+            if field not in producto_data or producto_data[field] is None or str(producto_data[field]).strip() == '':
+                raise HTTPException(status_code=400, detail=f"El campo {field} es requerido")
+        
+        # Validaciones de valores
+        if float(producto_data['precio_por_dia']) <= 0:
+            raise HTTPException(status_code=400, detail="El precio por día debe ser mayor a 0")
+        
+        if int(producto_data['stock_total']) < 0:
+            raise HTTPException(status_code=400, detail="El stock total no puede ser negativo")
+        
+        if int(producto_data['stock_disponible']) < 0:
+            raise HTTPException(status_code=400, detail="El stock disponible no puede ser negativo")
+        
+        if int(producto_data['stock_disponible']) > int(producto_data['stock_total']):
+            raise HTTPException(status_code=400, detail="El stock disponible no puede ser mayor al stock total")
+        
+        # Verificar que la categoría existe
+        categoria_exists = categorias_crud.get_by_id(db, producto_data['categoria_id'])
+        if not categoria_exists:
+            raise HTTPException(status_code=400, detail="La categoría especificada no existe")
+        
+        # Verificar que el código del producto no exista ya
+        existing_product = db.query(Producto).filter(Producto.codigo_producto == producto_data['codigo_producto']).first()
+        if existing_product:
+            raise HTTPException(status_code=400, detail="Ya existe un producto con este código")
+        
         nuevo_producto = productos_crud.create_producto(db, producto_data)
         return {
             "producto_id": nuevo_producto.producto_id,
@@ -451,8 +488,16 @@ def create_producto(
             "precio_por_dia": float(nuevo_producto.precio_por_dia),
             "stock_total": nuevo_producto.stock_total,
             "stock_disponible": nuevo_producto.stock_disponible,
-            "estado": nuevo_producto.estado
+            "estado": nuevo_producto.estado,
+            "especificaciones": nuevo_producto.especificaciones,
+            "dimensiones": nuevo_producto.dimensiones,
+            "peso": float(nuevo_producto.peso) if nuevo_producto.peso else None,
+            "imagen_url": nuevo_producto.imagen_url,
+            "requiere_deposito": bool(nuevo_producto.requiere_deposito),
+            "deposito_cantidad": float(nuevo_producto.deposito_cantidad) if nuevo_producto.deposito_cantidad else None
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al crear producto: {str(e)}")
 
@@ -465,9 +510,28 @@ def update_producto(
 ):
     """Actualizar producto (solo administradores)"""
     try:
-        updated_producto = productos_crud.update_producto(db, producto_id, producto_data)
-        if not updated_producto:
+        # Validar que el producto existe
+        existing_product = productos_crud.get_by_id(db, producto_id)
+        if not existing_product:
             raise HTTPException(status_code=404, detail="Producto no encontrado")
+        
+        # Validaciones de datos
+        if 'precio_por_dia' in producto_data and float(producto_data['precio_por_dia']) <= 0:
+            raise HTTPException(status_code=400, detail="El precio por día debe ser mayor a 0")
+        
+        if 'stock_total' in producto_data and int(producto_data['stock_total']) < 0:
+            raise HTTPException(status_code=400, detail="El stock total no puede ser negativo")
+        
+        if 'stock_disponible' in producto_data and int(producto_data['stock_disponible']) < 0:
+            raise HTTPException(status_code=400, detail="El stock disponible no puede ser negativo")
+        
+        # Validar que stock disponible no sea mayor que stock total
+        stock_total = producto_data.get('stock_total', existing_product.stock_total)
+        stock_disponible = producto_data.get('stock_disponible', existing_product.stock_disponible)
+        if int(stock_disponible) > int(stock_total):
+            raise HTTPException(status_code=400, detail="El stock disponible no puede ser mayor al stock total")
+        
+        updated_producto = productos_crud.update_producto(db, producto_id, producto_data)
         
         return {
             "producto_id": updated_producto.producto_id,
@@ -478,7 +542,13 @@ def update_producto(
             "precio_por_dia": float(updated_producto.precio_por_dia),
             "stock_total": updated_producto.stock_total,
             "stock_disponible": updated_producto.stock_disponible,
-            "estado": updated_producto.estado
+            "estado": updated_producto.estado,
+            "especificaciones": updated_producto.especificaciones,
+            "dimensiones": updated_producto.dimensiones,
+            "peso": float(updated_producto.peso) if updated_producto.peso else None,
+            "imagen_url": updated_producto.imagen_url,
+            "requiere_deposito": bool(updated_producto.requiere_deposito),
+            "deposito_cantidad": float(updated_producto.deposito_cantidad) if updated_producto.deposito_cantidad else None
         }
     except HTTPException:
         raise
@@ -493,11 +563,25 @@ def delete_producto(
 ):
     """Eliminar producto (solo administradores)"""
     try:
-        success = productos_crud.delete_producto(db, producto_id)
-        if not success:
+        # Verificar que el producto existe
+        existing_product = productos_crud.get_by_id(db, producto_id)
+        if not existing_product:
             raise HTTPException(status_code=404, detail="Producto no encontrado")
         
-        return {"message": "Producto eliminado exitosamente"}
+        # Verificar que el producto no esté ya inactivo
+        if existing_product.estado == "inactivo":
+            raise HTTPException(status_code=400, detail="El producto ya está inactivo")
+        
+        success = productos_crud.delete_producto(db, producto_id)
+        if not success:
+            raise HTTPException(status_code=500, detail="No se pudo eliminar el producto")
+        
+        return {
+            "message": f"Producto '{existing_product.nombre}' eliminado exitosamente",
+            "producto_id": producto_id,
+            "estado_anterior": existing_product.estado,
+            "estado_actual": "inactivo"
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -588,3 +672,239 @@ def delete_categoria(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al eliminar categoría: {str(e)}")
+
+# ========== ENDPOINTS DE PAQUETES ==========
+@router.get("/paquetes/activos")
+def get_paquetes_activos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Obtener paquetes activos para el frontend público"""
+    try:
+        paquetes = paquetes_crud.get_all(db, skip=skip, limit=limit)
+        
+        result = []
+        for paquete in paquetes:
+            # Calcular precio con descuento
+            precio_original = float(paquete.precio_por_dia)
+            descuento = float(paquete.descuento_porcentaje) if paquete.descuento_porcentaje else 0.0
+            precio_final = precio_original * (1 - descuento / 100)
+            
+            result.append({
+                "paquete_id": paquete.paquete_id,
+                "codigo_paquete": paquete.codigo_paquete,
+                "nombre": paquete.nombre,
+                "descripcion": paquete.descripcion,
+                "precio_por_dia": precio_original,
+                "precio_final": precio_final,
+                "descuento_porcentaje": descuento,
+                "imagen_url": paquete.imagen_url,
+                "capacidad_personas": paquete.capacidad_personas
+            })
+        
+        return {
+            "paquetes": result,
+            "total": len(result)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener paquetes activos: {str(e)}")
+
+@router.get("/paquetes")
+def get_paquetes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Obtener todos los paquetes activos"""
+    try:
+        paquetes = paquetes_crud.get_all(db, skip=skip, limit=limit)
+        
+        # Convertir a dict para evitar problemas de validación
+        result = []
+        for paquete in paquetes:
+            result.append({
+                "paquete_id": paquete.paquete_id,
+                "codigo_paquete": paquete.codigo_paquete,
+                "nombre": paquete.nombre,
+                "descripcion": paquete.descripcion,
+                "precio_por_dia": float(paquete.precio_por_dia),
+                "descuento_porcentaje": float(paquete.descuento_porcentaje) if paquete.descuento_porcentaje else 0.0,
+                "imagen_url": paquete.imagen_url,
+                "capacidad_personas": paquete.capacidad_personas,
+                "activo": bool(paquete.activo) if paquete.activo is not None else True,
+                "fecha_creacion": paquete.fecha_creacion.isoformat() if paquete.fecha_creacion else None,
+                "fecha_actualizacion": paquete.fecha_actualizacion.isoformat() if paquete.fecha_actualizacion else None
+            })
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener paquetes: {str(e)}")
+
+@router.get("/paquetes/{paquete_id}")
+def get_paquete(paquete_id: int, db: Session = Depends(get_db)):
+    """Obtener paquete por ID"""
+    paquete = paquetes_crud.get_by_id(db, paquete_id=paquete_id)
+    if paquete is None:
+        raise HTTPException(status_code=404, detail="Paquete no encontrado")
+    
+    return {
+        "paquete_id": paquete.paquete_id,
+        "codigo_paquete": paquete.codigo_paquete,
+        "nombre": paquete.nombre,
+        "descripcion": paquete.descripcion,
+        "precio_por_dia": float(paquete.precio_por_dia),
+        "descuento_porcentaje": float(paquete.descuento_porcentaje) if paquete.descuento_porcentaje else 0.0,
+        "imagen_url": paquete.imagen_url,
+        "capacidad_personas": paquete.capacidad_personas,
+        "activo": bool(paquete.activo),
+        "fecha_creacion": paquete.fecha_creacion.isoformat() if paquete.fecha_creacion else None,
+        "fecha_actualizacion": paquete.fecha_actualizacion.isoformat() if paquete.fecha_actualizacion else None
+    }
+
+# ========== ENDPOINTS DE GESTIÓN DE PAQUETES (ADMIN) ==========
+@router.get("/admin/paquetes")
+def get_all_paquetes_admin(
+    skip: int = 0, 
+    limit: int = 100, 
+    current_admin: Administrador = Depends(get_current_admin), 
+    db: Session = Depends(get_db)
+):
+    """Obtener todos los paquetes (solo administradores)"""
+    try:
+        paquetes = paquetes_crud.get_all_admin(db, skip=skip, limit=limit)
+        return [
+            {
+                "paquete_id": p.paquete_id,
+                "codigo_paquete": p.codigo_paquete,
+                "nombre": p.nombre,
+                "descripcion": p.descripcion,
+                "precio_por_dia": float(p.precio_por_dia),
+                "descuento_porcentaje": float(p.descuento_porcentaje) if p.descuento_porcentaje else 0.0,
+                "imagen_url": p.imagen_url,
+                "capacidad_personas": p.capacidad_personas,
+                "activo": bool(p.activo),
+                "fecha_creacion": p.fecha_creacion.isoformat() if p.fecha_creacion else None,
+                "fecha_actualizacion": p.fecha_actualizacion.isoformat() if p.fecha_actualizacion else None
+            } for p in paquetes
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener paquetes: {str(e)}")
+
+@router.post("/admin/paquetes")
+def create_paquete(
+    paquete_data: dict,
+    current_admin: Administrador = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Crear nuevo paquete (solo administradores)"""
+    try:
+        # Validaciones de datos requeridos
+        required_fields = ['codigo_paquete', 'nombre', 'precio_por_dia']
+        for field in required_fields:
+            if field not in paquete_data or paquete_data[field] is None or str(paquete_data[field]).strip() == '':
+                raise HTTPException(status_code=400, detail=f"El campo {field} es requerido")
+        
+        # Validaciones de valores
+        if float(paquete_data['precio_por_dia']) <= 0:
+            raise HTTPException(status_code=400, detail="El precio por día debe ser mayor a 0")
+        
+        if 'descuento_porcentaje' in paquete_data and paquete_data['descuento_porcentaje']:
+            descuento = float(paquete_data['descuento_porcentaje'])
+            if descuento < 0 or descuento > 100:
+                raise HTTPException(status_code=400, detail="El descuento debe estar entre 0 y 100%")
+        
+        if 'capacidad_personas' in paquete_data and paquete_data['capacidad_personas']:
+            if int(paquete_data['capacidad_personas']) <= 0:
+                raise HTTPException(status_code=400, detail="La capacidad de personas debe ser mayor a 0")
+        
+        # Verificar que el código del paquete no exista ya
+        existing_package = db.query(Paquete).filter(Paquete.codigo_paquete == paquete_data['codigo_paquete']).first()
+        if existing_package:
+            raise HTTPException(status_code=400, detail="Ya existe un paquete con este código")
+        
+        nuevo_paquete = paquetes_crud.create_paquete(db, paquete_data)
+        return {
+            "paquete_id": nuevo_paquete.paquete_id,
+            "codigo_paquete": nuevo_paquete.codigo_paquete,
+            "nombre": nuevo_paquete.nombre,
+            "descripcion": nuevo_paquete.descripcion,
+            "precio_por_dia": float(nuevo_paquete.precio_por_dia),
+            "descuento_porcentaje": float(nuevo_paquete.descuento_porcentaje) if nuevo_paquete.descuento_porcentaje else 0.0,
+            "imagen_url": nuevo_paquete.imagen_url,
+            "capacidad_personas": nuevo_paquete.capacidad_personas,
+            "activo": bool(nuevo_paquete.activo)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al crear paquete: {str(e)}")
+
+@router.put("/admin/paquetes/{paquete_id}")
+def update_paquete(
+    paquete_id: int,
+    paquete_data: dict,
+    current_admin: Administrador = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Actualizar paquete (solo administradores)"""
+    try:
+        # Validar que el paquete existe
+        existing_package = paquetes_crud.get_by_id(db, paquete_id)
+        if not existing_package:
+            raise HTTPException(status_code=404, detail="Paquete no encontrado")
+        
+        # Validaciones de datos
+        if 'precio_por_dia' in paquete_data and float(paquete_data['precio_por_dia']) <= 0:
+            raise HTTPException(status_code=400, detail="El precio por día debe ser mayor a 0")
+        
+        if 'descuento_porcentaje' in paquete_data and paquete_data['descuento_porcentaje']:
+            descuento = float(paquete_data['descuento_porcentaje'])
+            if descuento < 0 or descuento > 100:
+                raise HTTPException(status_code=400, detail="El descuento debe estar entre 0 y 100%")
+        
+        if 'capacidad_personas' in paquete_data and paquete_data['capacidad_personas']:
+            if int(paquete_data['capacidad_personas']) <= 0:
+                raise HTTPException(status_code=400, detail="La capacidad de personas debe ser mayor a 0")
+        
+        updated_paquete = paquetes_crud.update_paquete(db, paquete_id, paquete_data)
+        
+        return {
+            "paquete_id": updated_paquete.paquete_id,
+            "codigo_paquete": updated_paquete.codigo_paquete,
+            "nombre": updated_paquete.nombre,
+            "descripcion": updated_paquete.descripcion,
+            "precio_por_dia": float(updated_paquete.precio_por_dia),
+            "descuento_porcentaje": float(updated_paquete.descuento_porcentaje) if updated_paquete.descuento_porcentaje else 0.0,
+            "imagen_url": updated_paquete.imagen_url,
+            "capacidad_personas": updated_paquete.capacidad_personas,
+            "activo": bool(updated_paquete.activo)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al actualizar paquete: {str(e)}")
+
+@router.delete("/admin/paquetes/{paquete_id}")
+def delete_paquete(
+    paquete_id: int,
+    current_admin: Administrador = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Eliminar paquete (solo administradores)"""
+    try:
+        # Verificar que el paquete existe
+        existing_package = paquetes_crud.get_by_id(db, paquete_id)
+        if not existing_package:
+            raise HTTPException(status_code=404, detail="Paquete no encontrado")
+        
+        # Verificar que el paquete no esté ya inactivo
+        if not existing_package.activo:
+            raise HTTPException(status_code=400, detail="El paquete ya está inactivo")
+        
+        success = paquetes_crud.delete_paquete(db, paquete_id)
+        if not success:
+            raise HTTPException(status_code=500, detail="No se pudo eliminar el paquete")
+        
+        return {
+            "message": f"Paquete '{existing_package.nombre}' eliminado exitosamente",
+            "paquete_id": paquete_id,
+            "estado_anterior": "activo",
+            "estado_actual": "inactivo"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar paquete: {str(e)}")
