@@ -86,8 +86,8 @@ const PackageDetail = () => {
         <div className="package-detail-content">
           {/* Imagen del paquete */}
           <div className="package-detail-image">
-            {paquete.imagen_url ? (
-              <img src={paquete.imagen_url} alt={paquete.nombre} />
+            {paquete.imagen_dato ? (
+              <img src={paquete.imagen_dato} alt={paquete.nombre} />
             ) : (
               <div className="package-detail-no-image">
                 <span>📦</span>

@@ -11,6 +11,16 @@ const ProductCard = ({ productInfo, onClick }) => {
 
   const isOutOfStock = stock === 0;
 
+  // Función para manejar la imagen de respaldo
+  const getImageStyle = () => {
+    return {
+      backgroundImage: `url(${imageUrl || '/images/silla.jpg'})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    };
+  };
+
   return (
     <div 
       className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`} 
@@ -19,7 +29,7 @@ const ProductCard = ({ productInfo, onClick }) => {
     >
       <div 
         className="product-card-image"
-        style={{ backgroundImage: `url(${imageUrl})` }}
+        style={getImageStyle()}
       />
       
       <div className="product-card-content">

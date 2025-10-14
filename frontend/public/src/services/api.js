@@ -85,6 +85,9 @@ const authenticatedRequest = async (endpoint, options = {}, isAdmin = false) => 
 export const adminDashboardService = {
   // Obtener datos del dashboard
   getDashboardData: () => authenticatedRequest('/admin/dashboard', {}, true),
+  
+  // Debug de imágenes
+  debugImages: () => authenticatedRequest('/admin/debug/images', {}, true),
 };
 
 // Servicios para administradores - Gestión de usuarios
@@ -117,11 +120,67 @@ export const adminProductsService = {
     body: JSON.stringify(productData),
   }, true),
   
+  // Crear producto con formulario (para archivos)
+  createForm: (formData) => {
+    const token = adminAuthService.getToken();
+    console.log('Creating product with form data:', formData);
+    
+    // Debug: mostrar contenido del FormData
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
+    return fetch(`${API_BASE_URL}/admin/productos/form`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData, // FormData no necesita Content-Type
+    }).then(response => {
+      console.log('Response status:', response.status);
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          console.error('Error response:', errorData);
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        });
+      }
+      return response.json();
+    });
+  },
+  
   // Actualizar producto
   update: (productId, productData) => authenticatedRequest(`/admin/productos/${productId}`, {
     method: 'PUT',
     body: JSON.stringify(productData),
   }, true),
+  
+  // Actualizar producto con formulario (para archivos)
+  updateForm: (productId, formData) => {
+    const token = adminAuthService.getToken();
+    console.log('Updating product with form data:', productId, formData);
+    
+    // Debug: mostrar contenido del FormData
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
+    return fetch(`${API_BASE_URL}/admin/productos/${productId}/form`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData, // FormData no necesita Content-Type
+    }).then(response => {
+      console.log('Update response status:', response.status);
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          console.error('Update error response:', errorData);
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        });
+      }
+      return response.json();
+    });
+  },
   
   // Eliminar producto
   delete: (productId) => authenticatedRequest(`/admin/productos/${productId}`, {
@@ -141,11 +200,67 @@ export const adminPackagesService = {
     body: JSON.stringify(packageData),
   }, true),
   
+  // Crear paquete con formulario (para archivos)
+  createForm: (formData) => {
+    const token = adminAuthService.getToken();
+    console.log('Creating package with form data:', formData);
+    
+    // Debug: mostrar contenido del FormData
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
+    return fetch(`${API_BASE_URL}/admin/paquetes/form`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData, // FormData no necesita Content-Type
+    }).then(response => {
+      console.log('Package create response status:', response.status);
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          console.error('Package create error response:', errorData);
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        });
+      }
+      return response.json();
+    });
+  },
+  
   // Actualizar paquete
   update: (packageId, packageData) => authenticatedRequest(`/admin/paquetes/${packageId}`, {
     method: 'PUT',
     body: JSON.stringify(packageData),
   }, true),
+  
+  // Actualizar paquete con formulario (para archivos)
+  updateForm: (packageId, formData) => {
+    const token = adminAuthService.getToken();
+    console.log('Updating package with form data:', packageId, formData);
+    
+    // Debug: mostrar contenido del FormData
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
+    return fetch(`${API_BASE_URL}/admin/paquetes/${packageId}/form`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData, // FormData no necesita Content-Type
+    }).then(response => {
+      console.log('Package update response status:', response.status);
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          console.error('Package update error response:', errorData);
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        });
+      }
+      return response.json();
+    });
+  },
   
   // Eliminar paquete
   delete: (packageId) => authenticatedRequest(`/admin/paquetes/${packageId}`, {

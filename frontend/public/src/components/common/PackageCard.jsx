@@ -13,6 +13,16 @@ const PackageCard = ({ packageInfo, onClick }) => {
   const finalPrice = discount ? price * (1 - discount / 100) : price;
   const hasDiscount = discount && discount > 0;
 
+  // Función para manejar la imagen de respaldo
+  const getImageStyle = () => {
+    return {
+      backgroundImage: `url(${imageUrl || '/images/package-default.jpg'})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    };
+  };
+
   return (
     <div 
       className="package-card" 
@@ -21,7 +31,7 @@ const PackageCard = ({ packageInfo, onClick }) => {
     >
       <div 
         className="package-card-image"
-        style={{ backgroundImage: `url(${imageUrl})` }}
+        style={getImageStyle()}
       />
       
       <div className="package-card-content">

@@ -29,6 +29,13 @@ const Products = () => {
           categoriasService.getAll()
         ]);
         
+        console.log('Products loaded:', productosData.productos);
+        console.log('Sample product with image:', {
+          product: productosData.productos[0],
+          hasImageUrl: !!productosData.productos[0]?.imagen_url,
+          imageUrl: productosData.productos[0]?.imagen_url
+        });
+        
         setProductos(productosData.productos);
         setCategorias(categoriasData);
       } catch (err) {

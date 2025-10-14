@@ -15,6 +15,14 @@ const Packages = () => {
       try {
         setLoading(true);
         const data = await paquetesService.getAll();
+        
+        console.log('Packages loaded:', data);
+        console.log('Sample package with image:', {
+          package: data[0],
+          hasImageUrl: !!data[0]?.imagen_url,
+          imageUrl: data[0]?.imagen_url
+        });
+        
         setPaquetes(data);
       } catch (err) {
         setError('Error al cargar los paquetes');

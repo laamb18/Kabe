@@ -29,7 +29,7 @@ class ProductoBase(BaseModel):
     especificaciones: Optional[str] = None
     dimensiones: Optional[str] = None
     peso: Optional[float] = None
-    imagen_url: Optional[str] = None
+    imagen_dato: Optional[bytes] = None
     requiere_deposito: bool = False
     deposito_cantidad: Optional[float] = None
 
@@ -55,7 +55,7 @@ class ProductoConCategoria(BaseModel):
     especificaciones: Optional[str] = None
     dimensiones: Optional[str] = None
     peso: Optional[float] = None
-    imagen_url: Optional[str] = None
+    imagen_dato: Optional[bytes] = None
     requiere_deposito: bool
     deposito_cantidad: Optional[float] = None
     categoria_nombre: str
@@ -71,7 +71,7 @@ class PaqueteBase(BaseModel):
     descripcion: Optional[str] = None
     precio_por_dia: float
     descuento_porcentaje: Optional[float] = 0.00
-    imagen_url: Optional[str] = None
+    imagen_dato: Optional[bytes] = None
     capacidad_personas: Optional[int] = None
     activo: bool = True
 

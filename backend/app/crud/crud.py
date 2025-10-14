@@ -89,11 +89,14 @@ class ProductosCRUD:
         
         # Actualizar solo los campos que se proporcionan
         for key, value in producto_data.items():
-            if hasattr(db_producto, key) and value is not None:
+            if hasattr(db_producto, key):
                 # Manejar campos especiales
                 if key == 'especificaciones' and isinstance(value, str):
                     # Si especificaciones viene como string, mantenerlo como string
                     setattr(db_producto, key, value)
+                elif key in ['requiere_deposito', 'activo'] and isinstance(value, str):
+                    # Convertir strings a boolean para campos boolean
+                    setattr(db_producto, key, value.lower() in ('true', '1', 'yes', 'on'))
                 else:
                     setattr(db_producto, key, value)
         
@@ -120,6 +123,20 @@ class ProductosCRUD:
             db.rollback()
             raise e
     
+    def delete_producto_permanently(self, db: Session, producto_id: int) -> bool:
+        """Eliminar producto permanentemente de la base de datos"""
+        db_producto = self.get_by_id(db, producto_id)
+        if not db_producto:
+            return False
+        
+        try:
+            db.delete(db_producto)
+            db.commit()
+            return True
+        except Exception as e:
+            db.rollback()
+            raise e
+    
     def get_productos_con_categoria(self, db: Session, skip: int = 0, limit: int = 100):
         """Obtener productos con información de categoría"""
         query = text("""
@@ -133,7 +150,7 @@ class ProductosCRUD:
                 p.stock_total,
                 p.stock_disponible,
                 p.estado,
-                p.imagen_url,
+                p.imagen_dato,
                 p.requiere_deposito,
                 p.deposito_cantidad,
                 c.nombre as categoria_nombre,
@@ -315,8 +332,13 @@ class PaquetesCRUD:
         
         # Actualizar solo los campos que se proporcionan
         for key, value in paquete_data.items():
-            if hasattr(db_paquete, key) and value is not None:
-                setattr(db_paquete, key, value)
+            if hasattr(db_paquete, key):
+                # Manejar campos especiales
+                if key == 'activo' and isinstance(value, str):
+                    # Convertir strings a boolean para campos boolean
+                    setattr(db_paquete, key, value.lower() in ('true', '1', 'yes', 'on'))
+                else:
+                    setattr(db_paquete, key, value)
         
         try:
             db.commit()
@@ -335,6 +357,20 @@ class PaquetesCRUD:
         try:
             # Cambiar estado a inactivo en lugar de eliminar físicamente
             db_paquete.activo = False
+            db.commit()
+            return True
+        except Exception as e:
+            db.rollback()
+            raise e
+    
+    def delete_paquete_permanently(self, db: Session, paquete_id: int) -> bool:
+        """Eliminar paquete permanentemente de la base de datos"""
+        db_paquete = self.get_by_id(db, paquete_id)
+        if not db_paquete:
+            return False
+        
+        try:
+            db.delete(db_paquete)
             db.commit()
             return True
         except Exception as e:

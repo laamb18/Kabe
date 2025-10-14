@@ -10,13 +10,14 @@ const AdminPackages = () => {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingPackage, setEditingPackage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [formData, setFormData] = useState({
     codigo_paquete: '',
     nombre: '',
     descripcion: '',
     precio_por_dia: '',
     descuento_porcentaje: '',
-    imagen_url: '',
     capacidad_personas: '',
     activo: true
   });
@@ -35,6 +36,15 @@ const AdminPackages = () => {
     try {
       setLoading(true);
       const data = await adminPackagesService.getAll();
+      
+      console.log('Packages data received:', data);
+      console.log('First package with image check:', {
+        package: data[0],
+        hasImageUrl: data[0]?.imagen_url ? 'YES' : 'NO',
+        imageUrlLength: data[0]?.imagen_url?.length || 0,
+        imageUrlPreview: data[0]?.imagen_url?.substring(0, 100) || 'N/A'
+      });
+      
       setPackages(data);
     } catch (err) {
       setError(err.message || 'Error al cargar paquetes');
@@ -55,11 +65,43 @@ const AdminPackages = () => {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        showErrorMessage('Tipo de archivo no permitido. Solo se permiten: JPG, PNG, GIF');
+        return;
+      }
+      
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showErrorMessage('La imagen es demasiado grande. Máximo 5MB');
+        return;
+      }
+      
+      setImageFile(file);
+      
+      // Crear preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(''); // Limpiar errores anteriores
     
     try {
+      console.log('Package form submission started');
+      console.log('Form data:', formData);
+      console.log('Image file:', imageFile);
+      console.log('Editing package:', editingPackage);
+      
       // Validaciones básicas
       if (!formData.codigo_paquete || !formData.nombre || !formData.precio_por_dia) {
         const errorMsg = 'Por favor completa todos los campos requeridos';
@@ -89,18 +131,34 @@ const AdminPackages = () => {
         return;
       }
 
-      const packageData = {
-        ...formData,
-        precio_por_dia: parseFloat(formData.precio_por_dia),
-        descuento_porcentaje: formData.descuento_porcentaje ? parseFloat(formData.descuento_porcentaje) : 0,
-        capacidad_personas: formData.capacidad_personas ? parseInt(formData.capacidad_personas) : null
-      };
+      // Crear FormData para envío con archivo
+      const formDataToSend = new FormData();
+      formDataToSend.append('codigo_paquete', formData.codigo_paquete);
+      formDataToSend.append('nombre', formData.nombre);
+      formDataToSend.append('descripcion', formData.descripcion);
+      formDataToSend.append('precio_por_dia', parseFloat(formData.precio_por_dia));
+      formDataToSend.append('descuento_porcentaje', formData.descuento_porcentaje ? parseFloat(formData.descuento_porcentaje) : 0);
+      formDataToSend.append('capacidad_personas', formData.capacidad_personas ? parseInt(formData.capacidad_personas) : 1);
+      formDataToSend.append('activo', formData.activo);
+      
+      if (imageFile) {
+        formDataToSend.append('imagen', imageFile);
+      }
+
+      console.log('Package FormData contents:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`${key}: ${value} (type: ${typeof value})`);
+      }
 
       if (editingPackage) {
-        await adminPackagesService.update(editingPackage.paquete_id, packageData);
+        console.log('Updating package with ID:', editingPackage.paquete_id);
+        const result = await adminPackagesService.updateForm(editingPackage.paquete_id, formDataToSend);
+        console.log('Package update result:', result);
         showSuccessMessage(`Paquete "${formData.nombre}" actualizado exitosamente`);
       } else {
-        await adminPackagesService.create(packageData);
+        console.log('Creating new package');
+        const result = await adminPackagesService.createForm(formDataToSend);
+        console.log('Package create result:', result);
         showSuccessMessage(`Paquete "${formData.nombre}" creado exitosamente`);
       }
 
@@ -108,7 +166,9 @@ const AdminPackages = () => {
       setEditingPackage(null);
       resetForm();
       setError(''); // Limpiar error en caso de éxito
+      console.log('Reloading packages...');
       await loadPackages(); // Usar await para asegurar que se actualice
+      console.log('Packages reloaded successfully');
     } catch (err) {
       console.error('Error al guardar paquete:', err);
       const errorMsg = err.message || 'Error al guardar paquete';
@@ -127,10 +187,18 @@ const AdminPackages = () => {
       descripcion: packageItem.descripcion || '',
       precio_por_dia: packageItem.precio_por_dia.toString(),
       descuento_porcentaje: packageItem.descuento_porcentaje ? packageItem.descuento_porcentaje.toString() : '',
-      imagen_url: packageItem.imagen_url || '',
       capacidad_personas: packageItem.capacidad_personas ? packageItem.capacidad_personas.toString() : '',
       activo: Boolean(packageItem.activo)
     });
+    
+    // Configurar preview de imagen existente
+    if (packageItem.imagen_url) {
+      setImagePreview(packageItem.imagen_url);
+    } else {
+      setImagePreview('');
+    }
+    setImageFile(null);
+    
     setShowModal(true);
   };
 
@@ -165,10 +233,11 @@ const AdminPackages = () => {
       descripcion: '',
       precio_por_dia: '',
       descuento_porcentaje: '',
-      imagen_url: '',
       capacidad_personas: '',
       activo: true
     });
+    setImageFile(null);
+    setImagePreview('');
   };
 
   if (loading) {
@@ -225,11 +294,26 @@ const AdminPackages = () => {
           {packages.map(packageItem => (
             <div key={packageItem.paquete_id} className="package-card">
               <div className="package-image">
-                {packageItem.imagen_url ? (
-                  <img src={packageItem.imagen_url} alt={packageItem.nombre} />
-                ) : (
-                  <div className="no-image"></div>
-                )}
+                {(() => {
+                  console.log(`Package ${packageItem.nombre} image check:`, {
+                    hasImageUrl: !!packageItem.imagen_url,
+                    imageUrl: packageItem.imagen_url?.substring(0, 50) + '...' || 'null'
+                  });
+                  return packageItem.imagen_url ? (
+                    <img 
+                      src={packageItem.imagen_url} 
+                      alt={packageItem.nombre}
+                      onError={(e) => {
+                        console.error('Package image failed to load:', e.target.src);
+                      }}
+                      onLoad={() => {
+                        console.log('Package image loaded successfully for:', packageItem.nombre);
+                      }}
+                    />
+                  ) : (
+                    <div className="no-image">Sin imagen</div>
+                  );
+                })()}
               </div>
               
               <div className="package-content">
@@ -400,25 +484,23 @@ const AdminPackages = () => {
               </div>
 
               <div className="form-group">
-                <label>URL de Imagen</label>
+                <label>Imagen del Paquete</label>
                 <input
-                  type="url"
-                  name="imagen_url"
-                  value={formData.imagen_url}
-                  onChange={handleInputChange}
-                  placeholder="https://ejemplo.com/imagen.jpg"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="file-input"
                 />
-                {formData.imagen_url && (
+                {imagePreview && (
                   <div className="image-preview">
                     <img 
-                      src={formData.imagen_url} 
-                      alt="Vista previa" 
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
+                      src={imagePreview} 
+                      alt="Preview" 
+                      style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px' }}
                     />
                   </div>
                 )}
+                <small className="form-help">Formatos permitidos: JPG, PNG, GIF. Máximo 5MB.</small>
               </div>
 
               <div className="checkbox-group">

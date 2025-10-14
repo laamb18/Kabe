@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminAuthService, adminProductsService, adminCategoriesService } from '../../services/api';
+import { adminAuthService, adminProductsService, adminCategoriesService, adminDashboardService } from '../../services/api';
 import { showSuccessMessage, showErrorMessage } from '../../utils/notifications';
 import '../../styles/pages/AdminProducts.css';
 
@@ -11,6 +11,8 @@ const AdminProducts = () => {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [formData, setFormData] = useState({
     categoria_id: '',
     codigo_producto: '',
@@ -23,7 +25,6 @@ const AdminProducts = () => {
     especificaciones: '',
     dimensiones: '',
     peso: '',
-    imagen_url: '',
     requiere_deposito: false,
     deposito_cantidad: ''
   });
@@ -45,6 +46,15 @@ const AdminProducts = () => {
         adminProductsService.getAll(),
         adminCategoriesService.getAll()
       ]);
+      
+      console.log('Products data received:', productsData);
+      console.log('First product with image check:', {
+        product: productsData[0],
+        hasImageUrl: productsData[0]?.imagen_url ? 'YES' : 'NO',
+        imageUrlLength: productsData[0]?.imagen_url?.length || 0,
+        imageUrlPreview: productsData[0]?.imagen_url?.substring(0, 100) || 'N/A'
+      });
+      
       setProducts(productsData);
       setCategories(categoriesData);
     } catch (err) {
@@ -66,11 +76,43 @@ const AdminProducts = () => {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        showErrorMessage('Tipo de archivo no permitido. Solo se permiten: JPG, PNG, GIF');
+        return;
+      }
+      
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showErrorMessage('La imagen es demasiado grande. Máximo 5MB');
+        return;
+      }
+      
+      setImageFile(file);
+      
+      // Crear preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(''); // Limpiar errores anteriores
     
     try {
+      console.log('Form submission started');
+      console.log('Form data:', formData);
+      console.log('Image file:', imageFile);
+      console.log('Editing product:', editingProduct);
+      
       // Validaciones básicas
       if (!formData.categoria_id || !formData.codigo_producto || !formData.nombre || !formData.precio_por_dia) {
         const errorMsg = 'Por favor completa todos los campos requeridos';
@@ -100,23 +142,40 @@ const AdminProducts = () => {
         return;
       }
 
-      const productData = {
-        ...formData,
-        categoria_id: parseInt(formData.categoria_id),
-        precio_por_dia: parseFloat(formData.precio_por_dia),
-        stock_total: parseInt(formData.stock_total),
-        stock_disponible: parseInt(formData.stock_disponible),
-        peso: formData.peso ? parseFloat(formData.peso) : null,
-        deposito_cantidad: formData.deposito_cantidad ? parseFloat(formData.deposito_cantidad) : null,
-        // Asegurar que especificaciones sea string si está vacío
-        especificaciones: formData.especificaciones || null
-      };
+      // Crear FormData para envío con archivo
+      const formDataToSend = new FormData();
+      formDataToSend.append('categoria_id', parseInt(formData.categoria_id));
+      formDataToSend.append('codigo_producto', formData.codigo_producto);
+      formDataToSend.append('nombre', formData.nombre);
+      formDataToSend.append('descripcion', formData.descripcion);
+      formDataToSend.append('precio_por_dia', parseFloat(formData.precio_por_dia));
+      formDataToSend.append('stock_total', parseInt(formData.stock_total));
+      formDataToSend.append('stock_disponible', parseInt(formData.stock_disponible));
+      formDataToSend.append('estado', formData.estado);
+      formDataToSend.append('especificaciones', formData.especificaciones || '');
+      formDataToSend.append('dimensiones', formData.dimensiones || '');
+      formDataToSend.append('peso', formData.peso ? parseFloat(formData.peso) : 0);
+      formDataToSend.append('requiere_deposito', formData.requiere_deposito);
+      formDataToSend.append('deposito_cantidad', formData.deposito_cantidad ? parseFloat(formData.deposito_cantidad) : 0);
+      
+      if (imageFile) {
+        formDataToSend.append('imagen', imageFile);
+      }
+
+      console.log('FormData contents:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`${key}: ${value} (type: ${typeof value})`);
+      }
 
       if (editingProduct) {
-        await adminProductsService.update(editingProduct.producto_id, productData);
+        console.log('Updating product with ID:', editingProduct.producto_id);
+        const result = await adminProductsService.updateForm(editingProduct.producto_id, formDataToSend);
+        console.log('Update result:', result);
         showSuccessMessage(`Producto "${formData.nombre}" actualizado exitosamente`);
       } else {
-        await adminProductsService.create(productData);
+        console.log('Creating new product');
+        const result = await adminProductsService.createForm(formDataToSend);
+        console.log('Create result:', result);
         showSuccessMessage(`Producto "${formData.nombre}" creado exitosamente`);
       }
 
@@ -124,7 +183,9 @@ const AdminProducts = () => {
       setEditingProduct(null);
       resetForm();
       setError(''); // Limpiar error en caso de éxito
+      console.log('Reloading data...');
       await loadData(); // Usar await para asegurar que se actualice
+      console.log('Data reloaded successfully');
     } catch (err) {
       console.error('Error al guardar producto:', err);
       const errorMsg = err.message || 'Error al guardar producto';
@@ -149,10 +210,18 @@ const AdminProducts = () => {
       especificaciones: product.especificaciones || '',
       dimensiones: product.dimensiones || '',
       peso: product.peso ? product.peso.toString() : '',
-      imagen_url: product.imagen_url || '',
       requiere_deposito: Boolean(product.requiere_deposito),
       deposito_cantidad: product.deposito_cantidad ? product.deposito_cantidad.toString() : ''
     });
+    
+    // Configurar preview de imagen existente
+    if (product.imagen_url) {
+      setImagePreview(product.imagen_url);
+    } else {
+      setImagePreview('');
+    }
+    setImageFile(null);
+    
     setShowModal(true);
   };
 
@@ -193,10 +262,36 @@ const AdminProducts = () => {
       especificaciones: '',
       dimensiones: '',
       peso: '',
-      imagen_url: '',
       requiere_deposito: false,
       deposito_cantidad: ''
     });
+    setImageFile(null);
+    setImagePreview('');
+  };
+
+  const handleDebugImages = async () => {
+    try {
+      const debugData = await adminDashboardService.debugImages();
+      console.log('=== DEBUG IMAGES ===');
+      console.log('Debug data:', debugData);
+      
+      debugData.productos.forEach((prod, index) => {
+        console.log(`Producto ${index + 1}: ${prod.nombre}`);
+        console.log(`  - Tiene imagen: ${prod.has_imagen_dato}`);
+        console.log(`  - Tamaño: ${prod.imagen_size} bytes`);
+        console.log(`  - URL generada: ${prod.imagen_url_generated}`);
+        console.log(`  - Tipo: ${prod.image_type || 'N/A'}`);
+        console.log(`  - Preview: ${prod.base64_preview || 'N/A'}`);
+        if (prod.base64_error) {
+          console.log(`  - Error: ${prod.base64_error}`);
+        }
+      });
+      
+      showSuccessMessage(`Debug completado. Ver consola para detalles.`);
+    } catch (error) {
+      console.error('Error en debug:', error);
+      showErrorMessage('Error al ejecutar debug');
+    }
   };
 
   if (loading) {
@@ -253,11 +348,26 @@ const AdminProducts = () => {
           {products.map(product => (
             <div key={product.producto_id} className="product-card">
               <div className="product-image">
-                {product.imagen_url ? (
-                  <img src={product.imagen_url} alt={product.nombre} />
-                ) : (
-                  <div className="no-image">📦</div>
-                )}
+                {(() => {
+                  console.log(`Product ${product.nombre} image check:`, {
+                    hasImageUrl: !!product.imagen_url,
+                    imageUrl: product.imagen_url?.substring(0, 50) + '...' || 'null'
+                  });
+                  return product.imagen_url ? (
+                    <img 
+                      src={product.imagen_url} 
+                      alt={product.nombre}
+                      onError={(e) => {
+                        console.error('Image failed to load:', e.target.src);
+                      }}
+                      onLoad={() => {
+                        console.log('Image loaded successfully for:', product.nombre);
+                      }}
+                    />
+                  ) : (
+                    <div className="no-image">Sin imagen</div>
+                  );
+                })()}
               </div>
               
               <div className="product-content">
@@ -449,14 +559,23 @@ const AdminProducts = () => {
               </div>
 
               <div className="form-group">
-                <label>URL de Imagen</label>
+                <label>Imagen del Producto</label>
                 <input
-                  type="url"
-                  name="imagen_url"
-                  value={formData.imagen_url}
-                  onChange={handleInputChange}
-                  placeholder="https://ejemplo.com/imagen.jpg"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="file-input"
                 />
+                {imagePreview && (
+                  <div className="image-preview">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px' }}
+                    />
+                  </div>
+                )}
+                <small className="form-help">Formatos permitidos: JPG, PNG, GIF. Máximo 5MB.</small>
               </div>
 
               <div className="form-group">
