@@ -1,12 +1,35 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/components/common/ProductCard.css';
+import ProductDetailModal from './ProductDetailModal';
 
 const ProductCard = ({ productInfo, onClick }) => {
+  const navigate = useNavigate();
   const { id, name, imageUrl, category, price, description, stock } = productInfo;
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const handleClick = () => {
     if (onClick) {
       onClick(id);
     }
+  };
+
+  const handleRentarClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/productos/${id}`);
+  };
+
+  const handleDetailsClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevenir que se active el onClick del card
+    console.log('Abriendo modal para producto:', id);
+    setShowDetailModal(true);
+  };
+
+  const handleCloseModal = () => {
+    console.log('Cerrando modal para producto:', id);
+    setShowDetailModal(false);
   };
 
   const isOutOfStock = stock === 0;
@@ -51,14 +74,25 @@ const ProductCard = ({ productInfo, onClick }) => {
           <button 
             className="product-card-btn primary"
             disabled={isOutOfStock}
+            onClick={handleRentarClick}
           >
             {isOutOfStock ? 'No disponible' : 'Rentar'}
           </button>
-          <button className="product-card-btn secondary">
+          <button 
+            className="product-card-btn secondary"
+            onClick={handleDetailsClick}
+          >
             Detalles
           </button>
         </div>
       </div>
+
+      {/* Modal de detalles */}
+      <ProductDetailModal
+        isOpen={showDetailModal}
+        onClose={handleCloseModal}
+        productId={id}
+      />
     </div>
   );
 };

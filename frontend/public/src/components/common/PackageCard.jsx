@@ -1,12 +1,24 @@
+import { useNavigate } from 'react-router-dom';
 import '../../styles/components/common/PackageCard.css';
 
 const PackageCard = ({ packageInfo, onClick }) => {
+  const navigate = useNavigate();
   const { id, name, imageUrl, shortDescription, price, discount, capacity, code } = packageInfo;
 
-  const handleClick = () => {
+  const handleCardClick = () => {
     if (onClick) {
       onClick(id);
     }
+  };
+
+  const handleExplorar = (e) => {
+    e.stopPropagation(); // Prevenir que se active el click del card
+    navigate(`/paquetes/${id}`);
+  };
+
+  const handleVerProductos = (e) => {
+    e.stopPropagation(); // Prevenir que se active el click del card
+    navigate('/productos');
   };
 
   // Calcular precio con descuento si existe
@@ -27,7 +39,7 @@ const PackageCard = ({ packageInfo, onClick }) => {
     <div 
       className="package-card" 
       data-id={id}
-      onClick={handleClick}
+      onClick={handleCardClick}
     >
       <div 
         className="package-card-image"
@@ -68,10 +80,16 @@ const PackageCard = ({ packageInfo, onClick }) => {
         </div>
         
         <div className="package-card-actions">
-          <button className="package-card-btn primary">
+          <button 
+            className="package-card-btn primary"
+            onClick={handleExplorar}
+          >
             EXPLORAR
           </button>
-          <button className="package-card-btn secondary">
+          <button 
+            className="package-card-btn secondary"
+            onClick={handleVerProductos}
+          >
             VER PRODUCTOS
           </button>
         </div>

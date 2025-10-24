@@ -86,7 +86,10 @@ const Login = () => {
         onClick={() => navigate('/')}
         title="Volver al inicio"
       >
-        ← Volver al inicio
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2z"/>
+        </svg>
+        Volver al inicio
       </button>
       
       <div className="login-container">
@@ -95,18 +98,24 @@ const Login = () => {
           <div className="image-overlay">
             <div className="overlay-content">
               <h2>Bienvenido de vuelta</h2>
-              <p>Accede a tu cuenta y continúa planificando eventos increíbles</p>
+              <p>Accede a tu cuenta y continúa creando eventos memorables</p>
               <div className="welcome-features">
                 <div className="welcome-item">
-                  <span className="welcome-icon">🎉</span>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="welcome-icon">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
                   <span>Gestiona tus eventos</span>
                 </div>
                 <div className="welcome-item">
-                  <span className="welcome-icon">📋</span>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="welcome-icon">
+                    <path d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                  </svg>
                   <span>Historial de pedidos</span>
                 </div>
                 <div className="welcome-item">
-                  <span className="welcome-icon">💬</span>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="welcome-icon">
+                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                  </svg>
                   <span>Soporte personalizado</span>
                 </div>
               </div>

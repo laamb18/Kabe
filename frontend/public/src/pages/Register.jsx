@@ -149,27 +149,36 @@ const Register = () => {
         onClick={() => navigate('/')}
         title="Volver al inicio"
       >
-        ← Volver al inicio
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2z"/>
+        </svg>
+        Volver al inicio
       </button>
       
-      <div className="register-container">
+      <div className="login-container">
         {/* Imagen lado izquierdo */}
-        <div className="register-image">
+        <div className="login-image">
           <div className="image-overlay">
             <div className="overlay-content">
               <h2>Únete a K'abé</h2>
-              <p>Descubre la mejor experiencia en renta de mobiliario para eventos</p>
+              <p>Crea tu cuenta y descubre la mejor experiencia en renta de mobiliario premium</p>
               <div className="features-list">
                 <div className="feature-item">
-                  <span className="feature-icon">✓</span>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="feature-icon">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
                   <span>Productos de calidad premium</span>
                 </div>
                 <div className="feature-item">
-                  <span className="feature-icon">✓</span>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="feature-icon">
+                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
                   <span>Servicio personalizado</span>
                 </div>
                 <div className="feature-item">
-                  <span className="feature-icon">✓</span>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="feature-icon">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
                   <span>Entrega puntual garantizada</span>
                 </div>
               </div>

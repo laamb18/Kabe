@@ -28,25 +28,17 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
-.about-image-placeholder {
+.about-image-main {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  object-fit: cover;
+  object-position: center 100%;
+  transition: transform 0.3s ease;
+  display: block;
 }
 
-.image-placeholder-text {
-  color: #666;
-  font-size: 1.1rem;
-  font-weight: 500;
-  text-align: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
+.about-image-main:hover {
+  transform: scale(1.05);
 }
 
 .about-image-overlay {
@@ -64,9 +56,7 @@
   transition: all 0.3s ease;
 }
 
-.about-image:hover .about-image-overlay {
-  opacity: 1;
-}
+
 
 /* Contenido lado derecho */
 .about-text {
@@ -143,29 +133,52 @@
 /* Features list */
 .about-features {
   margin-bottom: 2.5rem;
+  padding: 2rem;
+  border-radius: 12px;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
   margin-bottom: 1rem;
-  font-size: 0.95rem;
-  color: #555;
+  font-size: 1rem;
+  color: #1a1a1a !important;
+  transition: all 0.3s ease;
+  padding: 0.5rem 0;
+  font-weight: 600;
+}
+
+.feature-item:last-child {
+  margin-bottom: 0;
+}
+
+.feature-item:hover {
+  color: #000 !important;
+  transform: translateX(5px);
+}
+
+.feature-item span {
+  color: #1a1a1a !important;
+  font-weight: 600;
 }
 
 .feature-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   background: #22A89D;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  font-weight: bold;
   margin-right: 1rem;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover .feature-icon {
+  background: #AB4B02;
+  transform: scale(1.1);
 }
 
 /* Action buttons */
@@ -221,6 +234,10 @@
   .about-image {
     height: 400px;
   }
+  
+  .about-image-main {
+    object-fit: cover;
+  }
 }
 
 @media (max-width: 768px) {
@@ -241,6 +258,10 @@
   .about-image {
     height: 300px;
     order: 2;
+  }
+  
+  .about-image-main {
+    object-fit: cover;
   }
   
   .about-text {
@@ -286,6 +307,10 @@
   
   .about-image {
     height: 250px;
+  }
+  
+  .about-image-main {
+    object-fit: cover;
   }
   
   .about-title {

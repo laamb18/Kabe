@@ -14,23 +14,28 @@
   position: fixed;
   top: 2rem;
   left: 2rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border: 2px solid #AB4B02;
   color: #AB4B02;
-  padding: 0.75rem 1.5rem;
-  border-radius: 25px;
+  padding: 0.875rem 2rem;
+  border-radius: 30px;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
   z-index: 1000;
+  box-shadow: 0 4px 15px rgba(171, 75, 2, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .back-button:hover {
   background: #AB4B02;
   color: white;
-  transform: translateX(-3px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(171, 75, 2, 0.3);
 }
 
 .login-container {
@@ -48,29 +53,25 @@
 
 /* Imagen lado izquierdo */
 .login-image {
-  background: url('/images/login-bg.jpg') center/cover;
-  background-color: #AB4B02;
+  background: url('/frontend/public/images/login-image.jpg') center/cover;
+  background-color: #22A89D;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Fallback si no hay imagen */
-.login-image::before {
-  content: '';
+/* Overlay para mejorar legibilidad del texto */
+.image-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #AB4B02 0%, #8a3a01 50%, #22A89D 100%);
-  opacity: 0.9;
-}
-
-.image-overlay {
-  position: relative;
-  z-index: 2;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: white;
   text-align: center;
   padding: 3rem;
@@ -106,15 +107,16 @@
 }
 
 .welcome-icon {
-  font-size: 1.5rem;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.2);
+  width: 20px;
+  height: 20px;
+  color: #AB4B02;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 50%;
+  padding: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(10px);
+  flex-shrink: 0;
 }
 
 /* Formulario lado derecho */

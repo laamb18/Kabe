@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { paquetesService } from '../services/api';
 import '../styles/pages/PackageDetail.css';
 
 const PackageDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [paquete, setPaquete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     const loadPaquete = async () => {
@@ -31,6 +34,29 @@ const PackageDetail = () => {
 
   const handleGoBack = () => {
     navigate('/paquetes');
+  };
+
+  const handleSolicitarCotizacion = () => {
+    if (isAuthenticated()) {
+      // Si está autenticado, proceder con la cotización
+      // TODO: Implementar lógica de cotización
+      console.log('Proceder con cotización');
+    } else {
+      // Si no está autenticado, mostrar modal
+      setShowLoginModal(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowLoginModal(false);
+  };
+
+  const handleGoToLogin = () => {
+    navigate('/login');
+  };
+
+  const handleGoToRegister = () => {
+    navigate('/registro');
   };
 
   if (loading) {
@@ -86,8 +112,8 @@ const PackageDetail = () => {
         <div className="package-detail-content">
           {/* Imagen del paquete */}
           <div className="package-detail-image">
-            {paquete.imagen_dato ? (
-              <img src={paquete.imagen_dato} alt={paquete.nombre} />
+            {paquete.imagen_url ? (
+              <img src={paquete.imagen_url} alt={paquete.nombre} />
             ) : (
               <div className="package-detail-no-image">
                 <span>📦</span>
@@ -130,7 +156,10 @@ const PackageDetail = () => {
             )}
 
             <div className="package-detail-actions">
-              <button className="package-detail-btn primary">
+              <button 
+                className="package-detail-btn primary"
+                onClick={handleSolicitarCotizacion}
+              >
                 Solicitar Cotización
               </button>
               <button className="package-detail-btn secondary" onClick={handleGoBack}>
@@ -154,6 +183,47 @@ const PackageDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Login */}
+      {showLoginModal && (
+        <div className="login-modal-overlay" onClick={handleCloseModal}>
+          <div 
+            className="login-modal-content" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="login-modal-close" onClick={handleCloseModal}>
+              ✕
+            </button>
+            
+            <h2 className="login-modal-title">Inicia Sesión</h2>
+            <p className="login-modal-message">
+              Para solicitar una cotización necesitas iniciar sesión primero
+            </p>
+            
+            <div className="login-modal-actions">
+              <button 
+                className="login-modal-btn primary"
+                onClick={handleGoToLogin}
+              >
+                Iniciar Sesión
+              </button>
+              <button 
+                className="login-modal-btn secondary"
+                onClick={handleGoToRegister}
+              >
+                Crear Cuenta
+              </button>
+            </div>
+            
+            <button 
+              className="login-modal-cancel"
+              onClick={handleCloseModal}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

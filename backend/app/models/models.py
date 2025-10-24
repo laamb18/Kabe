@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime, Boolean, ForeignKey, Enum, Date, LargeBinary
+from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime, Boolean, ForeignKey, Enum, Date, LargeBinary, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
 import enum
+import json
 
 # Modelo Categoria (coincide con tu BD)
 class Categoria(Base):
@@ -31,7 +32,7 @@ class Producto(Base):
     stock_total = Column(Integer, nullable=False)
     stock_disponible = Column(Integer, nullable=False)
     estado = Column(String(20), default="disponible")  # enum: disponible, mantenimiento, inactivo
-    especificaciones = Column(Text)  # Es JSON en BD pero usamos Text por compatibilidad
+    especificaciones = Column(JSON)  # Campo JSON para especificaciones estructuradas
     dimensiones = Column(String(100))
     peso = Column(Numeric(8, 2))
     imagen_dato = Column(LargeBinary)

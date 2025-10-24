@@ -7,9 +7,11 @@ const AboutSection = () => {
         <div className="about-content">
           {/* Imagen lado izquierdo */}
           <div className="about-image">
-            <div className="about-image-placeholder">
-              <span className="image-placeholder-text">Imagen de sillas</span>
-            </div>
+            <img 
+              src="/frontend/public/images/mesa-about.jpg"
+              alt="Mobiliario de calidad - K'abé Renta de Mobiliario"
+              className="about-image-main"
+            />
             <div className="about-image-overlay"></div>
           </div>
           
@@ -36,15 +38,27 @@ const AboutSection = () => {
               
               <div className="about-features">
                 <div className="feature-item">
-                  <div className="feature-icon">✓</div>
+                  <div className="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
                   <span>Servicio puntual y confiable</span>
                 </div>
                 <div className="feature-item">
-                  <div className="feature-icon">✓</div>
+                  <div className="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
                   <span>Productos en excelente estado</span>
                 </div>
                 <div className="feature-item">
-                  <div className="feature-icon">✓</div>
+                  <div className="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
                   <span>Atención personalizada</span>
                 </div>
               </div>

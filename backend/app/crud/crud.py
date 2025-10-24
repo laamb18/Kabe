@@ -3,6 +3,7 @@ from sqlalchemy import text
 from app.models.models import Categoria, Producto, Usuario, Administrador, Paquete
 from app.core.auth import hash_password
 from typing import List, Optional
+import json
 
 class CategoriasCRUD:
     def get_all(self, db: Session, skip: int = 0, limit: int = 100) -> List[Categoria]:
@@ -72,6 +73,17 @@ class ProductosCRUD:
     def create_producto(self, db: Session, producto_data: dict) -> Producto:
         """Crear nuevo producto"""
         try:
+            # Procesar especificaciones antes de crear el producto
+            if 'especificaciones' in producto_data and isinstance(producto_data['especificaciones'], str):
+                try:
+                    # Si ya es JSON válido, usarlo como está
+                    json_value = json.loads(producto_data['especificaciones'])
+                    producto_data['especificaciones'] = json_value
+                except (json.JSONDecodeError, TypeError):
+                    # Si es un string plano, convertirlo a formato JSON
+                    json_value = {"descripcion": producto_data['especificaciones']}
+                    producto_data['especificaciones'] = json_value
+            
             db_producto = Producto(**producto_data)
             db.add(db_producto)
             db.commit()
@@ -92,8 +104,15 @@ class ProductosCRUD:
             if hasattr(db_producto, key):
                 # Manejar campos especiales
                 if key == 'especificaciones' and isinstance(value, str):
-                    # Si especificaciones viene como string, mantenerlo como string
-                    setattr(db_producto, key, value)
+                    # Convertir string a JSON válido para campo JSON
+                    try:
+                        # Si ya es JSON válido, usarlo como está
+                        json_value = json.loads(value)
+                        setattr(db_producto, key, json_value)
+                    except (json.JSONDecodeError, TypeError):
+                        # Si es un string plano, convertirlo a formato JSON
+                        json_value = {"descripcion": value}
+                        setattr(db_producto, key, json_value)
                 elif key in ['requiere_deposito', 'activo'] and isinstance(value, str):
                     # Convertir strings a boolean para campos boolean
                     setattr(db_producto, key, value.lower() in ('true', '1', 'yes', 'on'))

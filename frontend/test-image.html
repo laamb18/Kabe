@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Imagen Base64</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .image-container {
+            border: 2px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+        }
+        img {
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            background: #AB4B02;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #8a3d02;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Imagen Base64</h1>
+        
+        <div class="info">
+            <strong>Producto ID:</strong> <span id="productId">-</span><br>
+            <strong>Nombre:</strong> <span id="productName">-</span><br>
+            <strong>Tiene imagen:</strong> <span id="hasImage">-</span><br>
+            <strong>Tamaño imagen:</strong> <span id="imageSize">-</span>
+        </div>
+
+        <button onclick="loadProduct(15)">Cargar Producto 15 (Mesa Imperial)</button>
+        <button onclick="loadProduct(12)">Cargar Producto 12 (Carpa 5x5)</button>
+        
+        <div class="image-container" id="imageContainer">
+            <p>Haz clic en un botón para cargar una imagen</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadProduct(id) {
+            console.log('🔄 Cargando producto', id);
+            
+            try {
+                const response = await fetch(`http://localhost:8001/api/v1/productos/${id}`);
+                const data = await response.json();
+                
+                console.log('📦 Producto:', data.nombre);
+                console.log('🖼️  Tiene imagen:', data.imagen_url ? 'SÍ' : 'NO');
+                
+                document.getElementById('productId').textContent = data.producto_id;
+                document.getElementById('productName').textContent = data.nombre;
+                document.getElementById('hasImage').textContent = data.imagen_url ? 'SÍ ✅' : 'NO ❌';
+                document.getElementById('imageSize').textContent = data.imagen_url ? 
+                    `${data.imagen_url.length.toLocaleString()} caracteres` : '-';
+                
+                const container = document.getElementById('imageContainer');
+                
+                if (data.imagen_url) {
+                    console.log('📏 Longitud:', data.imagen_url.length);
+                    console.log('🔍 Primeros 50 chars:', data.imagen_url.substring(0, 50));
+                    
+                    container.innerHTML = `
+                        <img 
+                            src="${data.imagen_url}" 
+                            alt="${data.nombre}"
+                            onload="console.log('✅ Imagen cargada!')"
+                            onerror="console.error('❌ Error cargando imagen')"
+                        />
+                    `;
+                } else {
+                    container.innerHTML = '<p>❌ No hay imagen disponible</p>';
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('imageContainer').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

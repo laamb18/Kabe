@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import timedelta
 import base64
+import json
 from app.core.database import get_db
 from app.core.auth import authenticate_user, authenticate_admin, create_access_token, get_current_user, get_current_admin
 from app.core.config import settings
@@ -44,6 +45,26 @@ def convert_image_to_base64(imagen_dato):
             print(f"Image data type: {type(imagen_dato)}, length: {len(imagen_dato) if imagen_dato else 0}")
             return None
     return None
+
+# Helper function para convertir especificaciones JSON a string
+def convert_especificaciones_to_string(especificaciones_data):
+    """Convierte datos de especificaciones JSON a string para el frontend"""
+    if especificaciones_data is None:
+        return ""
+    
+    if isinstance(especificaciones_data, str):
+        return especificaciones_data
+    
+    if isinstance(especificaciones_data, dict):
+        # Si es un dict con estructura {"descripcion": "..."}, extraer la descripción
+        if "descripcion" in especificaciones_data:
+            return especificaciones_data["descripcion"]
+        # Si es un dict complejo, convertirlo a string JSON
+        import json
+        return json.dumps(especificaciones_data, ensure_ascii=False)
+    
+    # Para otros tipos, convertir a string
+    return str(especificaciones_data)
 
 # Helper function para manejar booleanos desde FormData
 def parse_form_boolean(value):
@@ -171,7 +192,7 @@ def get_productos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
                 "stock_total": producto.stock_total,
                 "stock_disponible": producto.stock_disponible,
                 "estado": producto.estado,
-                "especificaciones": producto.especificaciones,
+                "especificaciones": convert_especificaciones_to_string(producto.especificaciones),
                 "dimensiones": producto.dimensiones,
                 "peso": float(producto.peso) if producto.peso else None,
                 "imagen_url": convert_image_to_base64(producto.imagen_dato),
@@ -192,9 +213,27 @@ def get_producto(producto_id: int, db: Session = Depends(get_db)):
     if producto is None:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
+    # Obtener nombre de categoría si existe
+    categoria_nombre = None
+    if producto.categoria:
+        categoria_nombre = producto.categoria.nombre
+    
+    # Debug: verificar imagen
+    print(f"\n🔍 DEBUG - Producto ID: {producto.producto_id}")
+    print(f"   Nombre: {producto.nombre}")
+    print(f"   Tiene imagen_dato: {producto.imagen_dato is not None}")
+    if producto.imagen_dato:
+        print(f"   Tamaño imagen: {len(producto.imagen_dato)} bytes")
+    
+    imagen_url = convert_image_to_base64(producto.imagen_dato)
+    print(f"   imagen_url generada: {imagen_url is not None}")
+    if imagen_url:
+        print(f"   Longitud imagen_url: {len(imagen_url)} caracteres\n")
+    
     return {
         "producto_id": producto.producto_id,
         "categoria_id": producto.categoria_id,
+        "categoria_nombre": categoria_nombre,
         "codigo_producto": producto.codigo_producto,
         "nombre": producto.nombre,
         "descripcion": producto.descripcion,
@@ -202,10 +241,10 @@ def get_producto(producto_id: int, db: Session = Depends(get_db)):
         "stock_total": producto.stock_total,
         "stock_disponible": producto.stock_disponible,
         "estado": producto.estado,
-        "especificaciones": producto.especificaciones,
+        "especificaciones": convert_especificaciones_to_string(producto.especificaciones),
         "dimensiones": producto.dimensiones,
         "peso": float(producto.peso) if producto.peso else None,
-        "imagen_url": convert_image_to_base64(producto.imagen_dato),
+        "imagen_url": imagen_url,
         "requiere_deposito": bool(producto.requiere_deposito),
         "deposito_cantidad": float(producto.deposito_cantidad) if producto.deposito_cantidad else None,
         "fecha_creacion": producto.fecha_creacion.isoformat() if producto.fecha_creacion else None,
@@ -231,7 +270,7 @@ def get_productos_por_categoria(categoria_id: int, skip: int = 0, limit: int = 1
                 "stock_total": producto.stock_total,
                 "stock_disponible": producto.stock_disponible,
                 "estado": producto.estado,
-                "especificaciones": producto.especificaciones,
+                "especificaciones": convert_especificaciones_to_string(producto.especificaciones),
                 "dimensiones": producto.dimensiones,
                 "peso": float(producto.peso) if producto.peso else None,
                 "imagen_url": convert_image_to_base64(producto.imagen_dato),
@@ -546,7 +585,7 @@ def get_all_productos_admin(
                 "stock_total": p.stock_total,
                 "stock_disponible": p.stock_disponible,
                 "estado": p.estado,
-                "especificaciones": p.especificaciones,
+                "especificaciones": convert_especificaciones_to_string(p.especificaciones),
                 "dimensiones": p.dimensiones,
                 "peso": float(p.peso) if p.peso else None,
                 "imagen_url": convert_image_to_base64(p.imagen_dato),
@@ -607,7 +646,7 @@ def create_producto(
             "stock_total": nuevo_producto.stock_total,
             "stock_disponible": nuevo_producto.stock_disponible,
             "estado": nuevo_producto.estado,
-            "especificaciones": nuevo_producto.especificaciones,
+            "especificaciones": convert_especificaciones_to_string(nuevo_producto.especificaciones),
             "dimensiones": nuevo_producto.dimensiones,
             "peso": float(nuevo_producto.peso) if nuevo_producto.peso else None,
             "imagen_url": convert_image_to_base64(nuevo_producto.imagen_dato),
@@ -661,7 +700,7 @@ def update_producto(
             "stock_total": updated_producto.stock_total,
             "stock_disponible": updated_producto.stock_disponible,
             "estado": updated_producto.estado,
-            "especificaciones": updated_producto.especificaciones,
+            "especificaciones": convert_especificaciones_to_string(updated_producto.especificaciones),
             "dimensiones": updated_producto.dimensiones,
             "peso": float(updated_producto.peso) if updated_producto.peso else None,
             "imagen_url": convert_image_to_base64(updated_producto.imagen_dato),
@@ -1116,7 +1155,7 @@ async def create_producto_form(
             "stock_total": nuevo_producto.stock_total,
             "stock_disponible": nuevo_producto.stock_disponible,
             "estado": nuevo_producto.estado,
-            "especificaciones": nuevo_producto.especificaciones,
+            "especificaciones": convert_especificaciones_to_string(nuevo_producto.especificaciones),
             "dimensiones": nuevo_producto.dimensiones,
             "peso": float(nuevo_producto.peso) if nuevo_producto.peso else None,
             "imagen_url": convert_image_to_base64(nuevo_producto.imagen_dato),
@@ -1237,7 +1276,7 @@ async def update_producto_form(
             "stock_total": updated_producto.stock_total,
             "stock_disponible": updated_producto.stock_disponible,
             "estado": updated_producto.estado,
-            "especificaciones": updated_producto.especificaciones,
+            "especificaciones": convert_especificaciones_to_string(updated_producto.especificaciones),
             "dimensiones": updated_producto.dimensiones,
             "peso": float(updated_producto.peso) if updated_producto.peso else None,
             "imagen_url": convert_image_to_base64(updated_producto.imagen_dato),

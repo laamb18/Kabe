@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Products from './pages/Products';
+import ProductDetail from './pages/ProductDetail';
 import Packages from './pages/Packages';
 import PackageDetail from './pages/PackageDetail';
 import Profile from './pages/Profile';
@@ -44,6 +45,7 @@ function App() {
           <Route path="/paquetes/:id" element={<PackageDetail />} />
           <Route path="/categorias" element={<Packages />} />
           <Route path="/productos" element={<Products />} />
+          <Route path="/productos/:id" element={<ProductDetail />} />
           
           {/* Rutas de administrador */}
           <Route path="/admin/login" element={<AdminLogin />} />
