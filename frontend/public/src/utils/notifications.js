@@ -105,3 +105,7 @@ export const showErrorMessage = (message) => {
     }, 300);
   }, 5000);
 };
+
+// Alias para compatibilidad
+export const showSuccessNotification = showSuccessMessage;
+export const showErrorNotification = showErrorMessage;

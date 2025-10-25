@@ -64,11 +64,20 @@ export const AuthProvider = ({ children }) => {
     return !!user && !!authService.getToken();
   };
 
+  const updateUser = (updatedUserData) => {
+    // Actualizar el estado local
+    setUser(updatedUserData);
+    
+    // Actualizar localStorage
+    localStorage.setItem('user', JSON.stringify(updatedUserData));
+  };
+
   const value = {
     user,
     login,
     logout,
     isAuthenticated,
+    updateUser,
     loading
   };
 

@@ -37,8 +37,8 @@ import '../../styles/components/common/Navbar.css';
         { path: '/', label: 'Inicio', type: 'home' },
         { path: '/paquetes', label: 'Paquetes', type: 'link' },
         { path: '/productos', label: 'Productos', type: 'link' },
-        { path: '#contact', label: 'Cotización', type: 'scroll' },
-        { path: '#contact', label: 'Contacto', type: 'scroll' }
+        { path: '#contact', label: 'Cotización/Contacto', type: 'scroll', scrollTo: 'contact-section' },
+        { path: '#about', label: 'Sobre Nosotros', type: 'scroll', scrollTo: 'about-section' }
     ];
 
     const toggleMenu = () => {
@@ -83,10 +83,10 @@ import '../../styles/components/common/Navbar.css';
                 navigate('/');
                 // Esperar a que se cargue la página y luego hacer scroll
                 setTimeout(() => {
-                    scrollToContact();
+                    scrollToSection(item.scrollTo);
                 }, 100);
             } else {
-                scrollToContact();
+                scrollToSection(item.scrollTo);
             }
         } else if (item.type === 'home') {
             // Si no estamos en home, navegar a home
@@ -100,15 +100,17 @@ import '../../styles/components/common/Navbar.css';
         closeMenu();
     };
 
-    const scrollToContact = () => {
-        const contactSection = document.getElementById('contact-section');
-        if (contactSection) {
-            contactSection.scrollIntoView({ 
+    const scrollToSection = (sectionId) => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.scrollIntoView({ 
                 behavior: 'smooth',
                 block: 'start'
             });
         }
     };
+
+    
 
     const scrollToTop = () => {
         window.scrollTo({
@@ -236,7 +238,7 @@ import '../../styles/components/common/Navbar.css';
                                 className="profile-menu-item"
                                 onClick={() => handleProfileNavigation('/perfil')}
                             >
-                                <span className="menu-icon">�</span>
+                                <span className="menu-icon"></span>
                                 Mi Perfil
                             </button>
                             
@@ -244,7 +246,7 @@ import '../../styles/components/common/Navbar.css';
                                 className="profile-menu-item"
                                 onClick={() => handleProfileNavigation('/mis-eventos')}
                             >
-                                <span className="menu-icon">🎉</span>
+                                <span className="menu-icon"></span>
                                 Mis Eventos
                             </button>
                             
@@ -252,7 +254,7 @@ import '../../styles/components/common/Navbar.css';
                                 className="profile-menu-item"
                                 onClick={() => handleProfileNavigation('/historial')}
                             >
-                                <span className="menu-icon">�</span>
+                                <span className="menu-icon"></span>
                                 Historial
                             </button>
                             
@@ -262,7 +264,7 @@ import '../../styles/components/common/Navbar.css';
                                 className="profile-menu-item logout-item"
                                 onClick={handleAuth}
                             >
-                                <span className="menu-icon">🚪</span>
+                                <span className="menu-icon"></span>
                                 Cerrar Sesión
                             </button>
                         </div>

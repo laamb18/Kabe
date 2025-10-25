@@ -2,7 +2,7 @@ import '../../styles/components/common/AboutSection.css';
 
 const AboutSection = () => {
   return (
-    <section className="about-section">
+    <section className="about-section" id="about-section">
       <div className="about-container">
         <div className="about-content">
           {/* Imagen lado izquierdo */}

@@ -377,6 +377,32 @@ export const authService = {
   getUserData: () => {
     const userData = localStorage.getItem('user');
     return userData ? JSON.parse(userData) : null;
+  },
+  
+  // Actualizar perfil del usuario actual
+  updateProfile: (profileData) => {
+    const token = authService.getToken();
+    console.log('📤 Enviando datos de perfil:', profileData);
+    return apiRequest('/me/profile-raw', {  // Usando endpoint alternativo temporalmente
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(profileData),
+    });
+  },
+  
+  // Cambiar contraseña del usuario actual
+  changePassword: (passwordData) => {
+    const token = authService.getToken();
+    console.log('🔐 Enviando datos de contraseña');
+    return apiRequest('/me/password-raw', {  // Usando endpoint alternativo temporalmente
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(passwordData),
+    });
   }
 };
 

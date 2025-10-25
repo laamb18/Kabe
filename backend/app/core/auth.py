@@ -76,21 +76,34 @@ async def get_current_user(
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[Usuario]:
     """Autenticar usuario con email y contraseña"""
+    print(f"🔐 Autenticando usuario: {email}")
     user = db.query(Usuario).filter(Usuario.email == email).first()
     if not user:
+        print(f"❌ Usuario no encontrado: {email}")
         return None
     
+    print(f"🔐 Hash en BD: {user.password[:50]}...")
+    print(f"🔐 Contraseña ingresada: {password}")
+    
     # Intentar verificar contraseña hasheada primero
-    if verify_password(password, user.password):
-        return user
+    try:
+        is_valid = verify_password(password, user.password)
+        print(f"🔐 Verificación con hash: {is_valid}")
+        if is_valid:
+            print(f"✅ Autenticación exitosa con hash")
+            return user
+    except Exception as e:
+        print(f"❌ Error verificando hash: {e}")
     
     # Si no funciona, intentar comparación directa (para contraseñas en texto plano)
     if password == user.password:
+        print(f"✅ Autenticación exitosa con texto plano - actualizando hash")
         # Actualizar la contraseña a formato hasheado para mejorar la seguridad
         user.password = hash_password(password)
         db.commit()
         return user
     
+    print(f"❌ Autenticación fallida - contraseña incorrecta")
     return None
 
 def authenticate_admin(db: Session, email: str, password: str) -> Optional[Administrador]:

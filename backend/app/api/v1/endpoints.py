@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Request
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import timedelta
@@ -10,7 +10,8 @@ from app.core.config import settings
 from app.schemas.schemas import (
     Categoria, Producto, ProductoConCategoria, Paquete,
     UsuarioCreate, UsuarioResponse, LoginRequest, LoginResponse, MessageResponse,
-    AdministradorCreate, AdministradorResponse, AdminLoginResponse
+    AdministradorCreate, AdministradorResponse, AdminLoginResponse,
+    UsuarioUpdateProfile, UsuarioChangePassword
 )
 from app.models.models import Usuario, Administrador, Producto, Paquete
 from app.crud.crud import categorias_crud, productos_crud, usuarios_crud, administradores_crud, paquetes_crud
@@ -1457,3 +1458,195 @@ async def update_paquete_form(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al actualizar paquete: {str(e)}")
+
+
+# ========== ENDPOINTS DE PERFIL DE USUARIO ==========
+
+@router.post("/debug/profile")
+async def debug_profile_data(request: Request):
+    """Endpoint temporal para debuggear qué datos llegan"""
+    try:
+        body = await request.json()
+        print(f"🔍 DEBUG - Datos recibidos:")
+        print(f"   Type: {type(body)}")
+        print(f"   Content: {json.dumps(body, indent=2)}")
+        return {"received": body, "type": str(type(body))}
+    except Exception as e:
+        print(f"❌ Error al leer body: {e}")
+        return {"error": str(e)}
+
+@router.put("/me/profile-raw")
+async def update_my_profile_raw(
+    request: Request,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Endpoint alternativo que acepta JSON crudo"""
+    try:
+        profile_data = await request.json()
+        print(f"📝 Datos recibidos (raw): {profile_data}")
+        
+        # Campos permitidos
+        allowed_fields = ['nombre', 'apellido', 'telefono', 'direccion']
+        update_data = {k: v for k, v in profile_data.items() if k in allowed_fields and v}
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No hay datos para actualizar")
+        
+        # Actualizar usuario
+        updated_user = usuarios_crud.update_usuario(db, current_user.usuario_id, update_data)
+        
+        if not updated_user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        print(f"✅ Usuario actualizado exitosamente")
+        
+        return {
+            "usuario_id": updated_user.usuario_id,
+            "nombre": updated_user.nombre,
+            "apellido": updated_user.apellido,
+            "email": updated_user.email,
+            "telefono": updated_user.telefono,
+            "direccion": updated_user.direccion,
+            "fecha_registro": updated_user.fecha_registro.isoformat() if updated_user.fecha_registro else None
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/me/profile", response_model=UsuarioResponse)
+def update_my_profile(
+    profile_data: UsuarioUpdateProfile,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Actualizar información del perfil del usuario actual"""
+    try:
+        print(f"📝 Datos recibidos para actualizar perfil: {profile_data}")
+        
+        # Convertir a diccionario y filtrar valores None
+        update_data = profile_data.model_dump(exclude_unset=True, exclude_none=True)
+        print(f"📝 Datos filtrados: {update_data}")
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No hay datos para actualizar")
+        
+        # Actualizar usuario
+        updated_user = usuarios_crud.update_usuario(db, current_user.usuario_id, update_data)
+        
+        if not updated_user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        print(f"✅ Usuario actualizado exitosamente: {updated_user.nombre} {updated_user.apellido}")
+        
+        return UsuarioResponse(
+            usuario_id=updated_user.usuario_id,
+            nombre=updated_user.nombre,
+            apellido=updated_user.apellido,
+            email=updated_user.email,
+            telefono=updated_user.telefono,
+            direccion=updated_user.direccion,
+            fecha_registro=updated_user.fecha_registro
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error al actualizar perfil: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al actualizar perfil: {str(e)}")
+
+@router.put("/me/password-raw")
+async def change_my_password_raw(
+    request: Request,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Endpoint alternativo para cambiar contraseña que acepta JSON crudo"""
+    try:
+        password_data = await request.json()
+        print(f"🔐 Iniciando cambio de contraseña para: {current_user.email}")
+        
+        current_password = password_data.get('current_password')
+        new_password = password_data.get('new_password')
+        
+        if not current_password or not new_password:
+            raise HTTPException(status_code=400, detail="Se requiere contraseña actual y nueva contraseña")
+        
+        # Verificar contraseña actual
+        from app.core.auth import verify_password, hash_password
+        from app.models.models import Usuario
+        
+        if not verify_password(current_password, current_user.password):
+            raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
+        
+        # Validar nueva contraseña
+        if len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
+        
+        # Generar nuevo hash
+        hashed_password = hash_password(new_password)
+        print(f"🔐 Hash generado: {hashed_password}")
+        print(f"🔐 Longitud: {len(hashed_password)}")
+        
+        # Actualizar usando UPDATE directo (igual que el script que funcionó)
+        from sqlalchemy import update
+        stmt = update(Usuario).where(Usuario.usuario_id == current_user.usuario_id).values(password=hashed_password)
+        db.execute(stmt)
+        db.commit()
+        
+        print(f"✅ UPDATE ejecutado")
+        
+        # Verificar con una nueva consulta
+        verificar_user = db.query(Usuario).filter(Usuario.usuario_id == current_user.usuario_id).first()
+        
+        print(f"🔐 Hash en BD: {verificar_user.password}")
+        print(f"🔐 ¿Son iguales? {verificar_user.password == hashed_password}")
+        
+        # Verificar que funciona
+        test_verify = verify_password(new_password, verificar_user.password)
+        print(f"🔐 Verificación: {test_verify}")
+        
+        if not test_verify:
+            raise HTTPException(status_code=500, detail="Error: La contraseña no se guardó correctamente")
+        
+        print(f"🎉 Contraseña actualizada exitosamente")
+        return {"message": "Contraseña actualizada exitosamente"}
+        
+        print(f"✅ Contraseña actualizada exitosamente")
+        return {"message": "Contraseña actualizada exitosamente"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/me/password")
+def change_my_password(
+    password_data: UsuarioChangePassword,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Cambiar contraseña del usuario actual"""
+    try:
+        # Verificar contraseña actual
+        from app.core.auth import verify_password, hash_password
+        if not verify_password(password_data.current_password, current_user.password):
+            raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
+        
+        # Validar nueva contraseña
+        if len(password_data.new_password) < 6:
+            raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
+        
+        # Actualizar contraseña
+        hashed_password = hash_password(password_data.new_password)
+        updated_user = usuarios_crud.update_usuario(db, current_user.usuario_id, {'password': hashed_password})
+        
+        if not updated_user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        return {"message": "Contraseña actualizada exitosamente"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al cambiar contraseña: {str(e)}")

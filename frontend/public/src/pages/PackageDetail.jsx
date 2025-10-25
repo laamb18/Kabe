@@ -47,6 +47,22 @@ const PackageDetail = () => {
     }
   };
 
+  const handleAddToFavorites = () => {
+    if (isAuthenticated()) {
+      // Si está autenticado, agregar a favoritos
+      // TODO: Implementar lógica de favoritos
+      console.log('Agregar a favoritos');
+    } else {
+      // Si no está autenticado, mostrar modal
+      setShowLoginModal(true);
+    }
+  };
+
+  const handleContactForQuote = () => {
+    // Navegar a la sección de cotización
+    navigate("/", { state: { scrollTo: "contact-section" } });
+  };
+
   const handleCloseModal = () => {
     setShowLoginModal(false);
   };
@@ -162,8 +178,17 @@ const PackageDetail = () => {
               >
                 Solicitar Cotización
               </button>
-              <button className="package-detail-btn secondary" onClick={handleGoBack}>
-                Ver Otros Paquetes
+              <button 
+                className="package-detail-btn secondary"
+                onClick={handleAddToFavorites}
+              >
+                ❤️ Agregar a Favoritos
+              </button>
+              <button 
+                className="package-detail-btn outline"
+                onClick={handleContactForQuote}
+              >
+                📞 Contactar para más info
               </button>
             </div>
 
@@ -197,7 +222,7 @@ const PackageDetail = () => {
             
             <h2 className="login-modal-title">Inicia Sesión</h2>
             <p className="login-modal-message">
-              Para solicitar una cotización necesitas iniciar sesión primero
+              Para realizar esta acción necesitas iniciar sesión primero
             </p>
             
             <div className="login-modal-actions">

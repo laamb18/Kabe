@@ -145,3 +145,20 @@ class AdminLoginResponse(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
+# Schemas para actualización de perfil de usuario
+class UsuarioUpdateProfile(BaseModel):
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    telefono: Optional[str] = None
+    direccion: Optional[str] = None
+    
+    class Config:
+        extra = "ignore"  # Ignorar campos adicionales
+
+class UsuarioChangePassword(BaseModel):
+    current_password: str
+    new_password: str
+    
+    class Config:
+        extra = "ignore"  # Ignorar campos adicionales

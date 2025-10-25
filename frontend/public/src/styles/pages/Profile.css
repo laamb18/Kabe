@@ -1,6 +1,6 @@
 .profile-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f8f9fa;
   padding: 2rem 1rem;
   display: flex;
   align-items: center;
@@ -19,39 +19,52 @@
 
 .profile-header {
   text-align: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  margin: -2rem -2rem 2rem -2rem;
+  padding: 3rem 2rem 2rem 2rem;
+  background: #22A89D;
+  border-radius: 20px 20px 0 0;
 }
 
 .profile-avatar {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem;
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  margin: 0 auto 1.5rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .profile-avatar .avatar-icon {
-  font-size: 2rem;
   color: white;
+  width: 48px;
+  height: 48px;
 }
 
 .profile-header h1 {
   margin: 0 0 0.5rem;
   font-size: 2rem;
-  color: #333;
+  color: white;
   font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .profile-subtitle {
-  color: #666;
+  color: rgba(255, 255, 255, 0.95);
   margin: 0;
   font-size: 1rem;
+  font-weight: 500;
 }
 
 .profile-content {
@@ -61,12 +74,13 @@
 }
 
 .profile-section h2 {
-  margin: 0 0 1rem;
+  margin: 0 0 1.5rem;
   font-size: 1.4rem;
   color: #333;
-  font-weight: 600;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 0.5rem;
+  font-weight: 700;
+  border-bottom: 3px solid #22A89D;
+  padding-bottom: 0.75rem;
+  display: inline-block;
 }
 
 .profile-info {
@@ -78,10 +92,17 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #667eea;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #22A89D;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.info-group:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(34, 168, 157, 0.15);
 }
 
 .info-group label {
@@ -116,24 +137,27 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #22A89D;
   color: white;
+  box-shadow: 0 4px 12px rgba(34, 168, 157, 0.2);
 }
 
 .btn-primary:not(:disabled):hover {
+  background: #1e9688;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 16px rgba(34, 168, 157, 0.3);
 }
 
 .btn-secondary {
-  background: #f8f9fa;
-  color: #333;
-  border: 2px solid #dee2e6;
+  background: #AB4B02;
+  color: white;
+  box-shadow: 0 4px 12px rgba(171, 75, 2, 0.2);
 }
 
 .btn-secondary:not(:disabled):hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
+  background: #8e3d02;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(171, 75, 2, 0.3);
 }
 
 .btn-danger {
@@ -218,5 +242,79 @@
   
   .info-group {
     padding: 0.5rem;
+  }
+}
+
+/*
+ Estilos para formularios de edición */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.form-group input {
+  padding: 0.875rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #22A89D;
+  box-shadow: 0 0 0 3px rgba(34, 168, 157, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-actions button {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-actions .btn-primary:disabled,
+.form-actions .btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive para formularios */
+@media (max-width: 480px) {
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-group input {
+    padding: 0.75rem;
+    font-size: 0.95rem;
   }
 }

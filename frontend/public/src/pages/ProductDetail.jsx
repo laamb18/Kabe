@@ -71,6 +71,22 @@ const ProductDetail = () => {
     }
   };
 
+  const handleAddToFavorites = () => {
+    if (isAuthenticated()) {
+      // Si está autenticado, agregar a favoritos
+      // TODO: Implementar lógica de favoritos
+      console.log("Agregar a favoritos");
+    } else {
+      // Si no está autenticado, mostrar modal
+      setShowLoginModal(true);
+    }
+  };
+
+  const handleContactForQuote = () => {
+    // Navegar a la sección de cotización
+    navigate("/", { state: { scrollTo: "contact-section" } });
+  };
+
   const handleCloseModal = () => {
     setShowLoginModal(false);
   };
@@ -156,7 +172,9 @@ const ProductDetail = () => {
               <img
                 src={producto.imagen_url}
                 alt={producto.nombre}
-                className={`product-detail-image ${imageLoaded ? 'loaded' : ''}`}
+                className={`product-detail-image ${
+                  imageLoaded ? "loaded" : ""
+                }`}
                 onLoad={handleImageLoad}
                 onError={handleImageError}
               />
@@ -260,9 +278,16 @@ const ProductDetail = () => {
               </button>
               <button
                 className="product-detail-btn secondary"
-                onClick={handleGoBack}
+                onClick={handleAddToFavorites}
+                disabled={isOutOfStock}
               >
-                Ver Otros Productos
+                ❤️ Agregar a Favoritos
+              </button>
+              <button
+                className="product-detail-btn outline"
+                onClick={handleContactForQuote}
+              >
+                📞 Contactar para más info
               </button>
             </div>
 
@@ -304,7 +329,7 @@ const ProductDetail = () => {
 
             <h2 className="login-modal-title">Inicia Sesión</h2>
             <p className="login-modal-message">
-              Para rentar este producto necesitas iniciar sesión primero
+              Para realizar esta acción necesitas iniciar sesión primero
             </p>
 
             <div className="login-modal-actions">
