@@ -21,7 +21,7 @@
   text-align: center;
   margin: -2rem -2rem 2rem -2rem;
   padding: 3rem 2rem 2rem 2rem;
-  background: #22A89D;
+  background: #22a89d;
   border-radius: 20px 20px 0 0;
 }
 
@@ -78,7 +78,7 @@
   font-size: 1.4rem;
   color: #333;
   font-weight: 700;
-  border-bottom: 3px solid #22A89D;
+  border-bottom: 3px solid #22a89d;
   padding-bottom: 0.75rem;
   display: inline-block;
 }
@@ -95,7 +95,7 @@
   padding: 1rem 1.25rem;
   background: white;
   border-radius: 12px;
-  border-left: 4px solid #22A89D;
+  border-left: 4px solid #22a89d;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
@@ -137,7 +137,7 @@
 }
 
 .btn-primary {
-  background: #22A89D;
+  background: #22a89d;
   color: white;
   box-shadow: 0 4px 12px rgba(34, 168, 157, 0.2);
 }
@@ -149,7 +149,7 @@
 }
 
 .btn-secondary {
-  background: #AB4B02;
+  background: #ab4b02;
   color: white;
   box-shadow: 0 4px 12px rgba(171, 75, 2, 0.2);
 }
@@ -191,39 +191,39 @@
   .profile-page {
     padding: 1rem;
   }
-  
+
   .profile-container {
     padding: 1.5rem;
   }
-  
+
   .profile-header h1 {
     font-size: 1.5rem;
   }
-  
+
   .profile-avatar {
     width: 60px;
     height: 60px;
   }
-  
+
   .profile-avatar .avatar-icon {
     font-size: 1.5rem;
   }
-  
+
   .info-group {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .info-group label {
     min-width: auto;
     font-size: 0.9rem;
   }
-  
+
   .profile-actions {
     gap: 0.75rem;
   }
-  
+
   .profile-actions button {
     padding: 0.75rem;
     font-size: 0.9rem;
@@ -235,11 +235,11 @@
     padding: 1rem;
     border-radius: 15px;
   }
-  
+
   .profile-section h2 {
     font-size: 1.2rem;
   }
-  
+
   .info-group {
     padding: 0.5rem;
   }
@@ -276,7 +276,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #22A89D;
+  border-color: #22a89d;
   box-shadow: 0 0 0 3px rgba(34, 168, 157, 0.1);
 }
 
@@ -312,7 +312,7 @@
   .form-actions {
     flex-direction: column;
   }
-  
+
   .form-group input {
     padding: 0.75rem;
     font-size: 0.95rem;

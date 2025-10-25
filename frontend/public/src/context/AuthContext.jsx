@@ -1,12 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/api';
+import { createContext, useContext, useState, useEffect } from "react";
+import { authService } from "../services/api";
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+    throw new Error("useAuth debe ser usado dentro de un AuthProvider");
   }
   return context;
 };
@@ -21,12 +21,12 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = authService.getToken();
         const userData = authService.getUserData();
-        
+
         if (token && userData) {
           setUser(userData);
         }
       } catch (error) {
-        console.error('Error al inicializar autenticación:', error);
+        console.error("Error al inicializar autenticación:", error);
         // Limpiar datos corruptos
         authService.logout();
       } finally {
@@ -40,17 +40,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authService.login(email, password);
-      
+
       // Guardar en localStorage
-      localStorage.setItem('accessToken', response.access_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      
+      localStorage.setItem("accessToken", response.access_token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+
       // Actualizar estado
       setUser(response.user);
-      
+
       return response;
     } catch (error) {
-      console.error('Error en login:', error);
+      console.error("Error en login:", error);
       throw error;
     }
   };
@@ -67,9 +67,9 @@ export const AuthProvider = ({ children }) => {
   const updateUser = (updatedUserData) => {
     // Actualizar el estado local
     setUser(updatedUserData);
-    
+
     // Actualizar localStorage
-    localStorage.setItem('user', JSON.stringify(updatedUserData));
+    localStorage.setItem("user", JSON.stringify(updatedUserData));
   };
 
   const value = {
@@ -78,12 +78,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated,
     updateUser,
-    loading
+    loading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

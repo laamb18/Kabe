@@ -13,6 +13,8 @@ import PackageDetail from './pages/PackageDetail';
 import Profile from './pages/Profile';
 import MisEventos from './pages/MisEventos';
 import Historial from './pages/Historial';
+import MisTarjetas from './pages/MisTarjetas';
+import Carrito from './pages/Carrito';
 // Importaciones para administradores
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -41,6 +43,7 @@ function App() {
           <Route path="/perfil" element={<Profile />} />
           <Route path="/mis-eventos" element={<MisEventos />} />
           <Route path="/historial" element={<Historial />} />
+          <Route path="/mis-tarjetas" element={<MisTarjetas />} />
           <Route path="/paquetes" element={<Packages />} />
           <Route path="/paquetes/:id" element={<PackageDetail />} />
           <Route path="/categorias" element={<Packages />} />
@@ -55,13 +58,8 @@ function App() {
           <Route path="/admin/paquetes" element={<AdminPackages />} />
           <Route path="/admin/usuarios" element={<AdminUsers />} />
           
-          {/* Rutas adicionales que puedes agregar después */}
-          <Route path="/carrito" element={
-            <div className="coming-soon">
-              <h1>Carrito de Compras</h1>
-              <p>Próximamente disponible</p>
-            </div>
-          } />
+          {/* Ruta del carrito */}
+          <Route path="/carrito" element={<Carrito />} />
           {/* Ruta 404 */}
           <Route path="*" element={
             <div className="coming-soon">

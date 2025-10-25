@@ -258,6 +258,14 @@ import '../../styles/components/common/Navbar.css';
                                 Historial
                             </button>
                             
+                            <button 
+                                className="profile-menu-item"
+                                onClick={() => handleProfileNavigation('/mis-tarjetas')}
+                            >
+                                <span className="menu-icon"></span>
+                                Mis Tarjetas
+                            </button>
+                            
                             <div className="profile-divider"></div>
                             
                             <button 
