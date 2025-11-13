@@ -156,34 +156,47 @@
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
-  text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
-.product-card-btn.primary {
-  background: var(--primary-orange);
-  color: var(--white);
-  border: 2px solid var(--primary-orange);
-}
-
-.product-card-btn.primary:hover {
-  background: var(--white);
-  color: var(--primary-orange);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(171, 75, 2, 0.3);
-}
-
-.product-card-btn.secondary {
+.product-card-btn.details {
   background: transparent;
   color: var(--primary-teal);
   border: 2px solid var(--primary-teal);
 }
 
-.product-card-btn.secondary:hover {
+.product-card-btn.details:hover {
   background: var(--primary-teal);
   color: var(--white);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(34, 168, 157, 0.3);
+}
+
+.product-card-btn.add-to-cart {
+  background: var(--primary-orange);
+  color: var(--white);
+  border: 2px solid var(--primary-orange);
+}
+
+.product-card-btn.add-to-cart:hover {
+  background: #8a3d01;
+  border-color: #8a3d01;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(171, 75, 2, 0.3);
+}
+
+.product-card-btn.add-to-cart:disabled {
+  background: #ccc;
+  border-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.product-card-btn.add-to-cart:disabled:hover {
+  background: #ccc;
+  border-color: #ccc;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Estados especiales */

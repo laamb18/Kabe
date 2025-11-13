@@ -1,57 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCarrito } from '../context/CarritoContext';
 import '../styles/pages/Carrito.css';
 
 const Carrito = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { items: itemsCarrito, eliminarItem, actualizarCantidad, calcularSubtotal: calcularSubtotalItem, calcularTotal } = useCarrito();
   const [cuponCodigo, setCuponCodigo] = useState('');
-
-  // Datos de ejemplo - En producción vendrían del backend
-  const [itemsCarrito] = useState([
-    {
-      id: 1,
-      tipo: 'producto',
-      nombre: 'Silla Tiffany Blanca',
-      codigo: 'SILLA-001',
-      imagen: 'https://via.placeholder.com/150',
-      precioPorDia: 15000,
-      cantidad: 10,
-      diasRenta: 3,
-      fechaInicio: '2025-11-01',
-      fechaFin: '2025-11-03',
-      disponible: true
-    },
-    {
-      id: 2,
-      tipo: 'producto',
-      nombre: 'Mesa Rectangular 2m',
-      codigo: 'MESA-005',
-      imagen: 'https://via.placeholder.com/150',
-      precioPorDia: 35000,
-      cantidad: 5,
-      diasRenta: 3,
-      fechaInicio: '2025-11-01',
-      fechaFin: '2025-11-03',
-      disponible: true
-    },
-    {
-      id: 3,
-      tipo: 'paquete',
-      nombre: 'Paquete Boda Premium',
-      codigo: 'PKG-BODA-01',
-      imagen: 'https://via.placeholder.com/150',
-      precioPorDia: 250000,
-      cantidad: 1,
-      diasRenta: 2,
-      fechaInicio: '2025-11-05',
-      fechaFin: '2025-11-06',
-      descuento: 15,
-      disponible: true,
-      capacidad: 100
-    }
-  ]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-CO', {
@@ -70,25 +27,15 @@ const Carrito = () => {
     });
   };
 
-  const calcularSubtotal = (item) => {
-    const precioBase = item.precioPorDia * item.cantidad * item.diasRenta;
-    if (item.descuento) {
-      return precioBase * (1 - item.descuento / 100);
-    }
-    return precioBase;
-  };
-
-  const subtotal = itemsCarrito.reduce((sum, item) => sum + calcularSubtotal(item), 0);
+  const totales = calcularTotal();
   const descuentoCupon = 0; // Se calculará cuando se aplique un cupón
-  const iva = subtotal * 0.19;
-  const total = subtotal - descuentoCupon + iva;
 
   const handleContinuarCompra = () => {
     if (!isAuthenticated()) {
       navigate('/login');
     } else {
-      // Aquí iría la lógica para proceder al checkout
-      console.log('Proceder al checkout');
+      // Redirigir a la página de checkout
+      navigate('/checkout');
     }
   };
 
@@ -214,13 +161,19 @@ const Carrito = () => {
 
                         <div className="item-actions">
                           <div className="quantity-control">
-                            <button className="qty-btn">
+                            <button 
+                              className="qty-btn"
+                              onClick={() => actualizarCantidad(item.id, item.cantidad - 1)}
+                            >
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                               </svg>
                             </button>
                             <span className="quantity">{item.cantidad}</span>
-                            <button className="qty-btn">
+                            <button 
+                              className="qty-btn"
+                              onClick={() => actualizarCantidad(item.id, item.cantidad + 1)}
+                            >
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -228,7 +181,10 @@ const Carrito = () => {
                             </button>
                           </div>
 
-                          <button className="btn-remove">
+                          <button 
+                            className="btn-remove"
+                            onClick={() => eliminarItem(item.id)}
+                          >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <polyline points="3 6 5 6 21 6"></polyline>
                               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -240,7 +196,7 @@ const Carrito = () => {
 
                       <div className="item-subtotal">
                         <span className="subtotal-label">Subtotal</span>
-                        <span className="subtotal-value">{formatCurrency(calcularSubtotal(item))}</span>
+                        <span className="subtotal-value">{formatCurrency(calcularSubtotalItem(item))}</span>
                         {item.descuento && (
                           <span className="precio-original">{formatCurrency(item.precioPorDia * item.cantidad * item.diasRenta)}</span>
                         )}
@@ -290,7 +246,7 @@ const Carrito = () => {
                   <div className="summary-content">
                     <div className="summary-row">
                       <span>Subtotal</span>
-                      <span>{formatCurrency(subtotal)}</span>
+                      <span>{formatCurrency(totales.subtotal)}</span>
                     </div>
 
                     {descuentoCupon > 0 && (
@@ -302,14 +258,14 @@ const Carrito = () => {
 
                     <div className="summary-row">
                       <span>IVA (19%)</span>
-                      <span>{formatCurrency(iva)}</span>
+                      <span>{formatCurrency(totales.iva)}</span>
                     </div>
 
                     <div className="summary-divider"></div>
 
                     <div className="summary-row total">
                       <span>Total</span>
-                      <span>{formatCurrency(total)}</span>
+                      <span>{formatCurrency(totales.total)}</span>
                     </div>
 
                     <button className="btn-checkout" onClick={handleContinuarCompra}>

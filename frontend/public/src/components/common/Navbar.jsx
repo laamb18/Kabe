@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCarrito } from '../../context/CarritoContext';
 import '../../styles/components/common/Navbar.css';
 
     const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [cartCount] = useState(0); // TODO: conectar con Context
+    const { cantidadItems } = useCarrito();
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const { user, logout, isAuthenticated } = useAuth();
     const location = useLocation();
@@ -199,7 +200,7 @@ import '../../styles/components/common/Navbar.css';
                     <circle cx="19" cy="21" r="1"></circle>
                     <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57L20.16 9H5.12"></path>
                 </svg>
-                {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+                {cantidadItems > 0 && <span className="cart-count">{cantidadItems}</span>}
                 </Link>
 
                 {/* User Profile o Auth Buttons */}
@@ -345,7 +346,7 @@ import '../../styles/components/common/Navbar.css';
             {/* Carrito */}
             <li className="mobile-item">
                 <Link to="/carrito" className="mobile-link" onClick={closeMenu}>
-                🛒 Carrito ({cartCount})
+                🛒 Carrito ({cantidadItems})
                 </Link>
             </li>
             

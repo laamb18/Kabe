@@ -1,56 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { solicitudesService } from '../services/api';
 import '../styles/pages/MisEventos.css';
 
 const MisEventos = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState('todos');
+  const [eventos, setEventos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Cargar solicitudes del backend
+  useEffect(() => {
+    const cargarSolicitudes = async () => {
+      if (!isAuthenticated()) return;
+      
+      try {
+        setLoading(true);
+        const solicitudes = await solicitudesService.getMisSolicitudes();
+        
+        // Transformar solicitudes al formato de eventos
+        const eventosTransformados = solicitudes.map(sol => ({
+          id: sol.solicitud_id,
+          nombre: sol.tipo_evento || `Solicitud ${sol.numero_solicitud}`,
+          fecha: sol.fecha_evento_inicio,
+          hora: '00:00',
+          ubicacion: sol.direccion_evento || 'Por definir',
+          estado: mapearEstado(sol.estado),
+          productos: sol.total_productos || 0,
+          paquetes: sol.total_paquetes || 0,
+          total: sol.total_cotizacion,
+          personas: sol.num_personas_estimado || 0,
+          numero_solicitud: sol.numero_solicitud
+        }));
+        
+        setEventos(eventosTransformados);
+        setError(null);
+      } catch (err) {
+        console.error('Error al cargar solicitudes:', err);
+        setError('No se pudieron cargar los eventos');
+        setEventos([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarSolicitudes();
+  }, [isAuthenticated]);
+
+  // Mapear estados de solicitud a estados de evento
+  const mapearEstado = (estadoSolicitud) => {
+    const mapeo = {
+      'pendiente': 'pendiente',
+      'aprobada': 'confirmado',
+      'rechazada': 'cancelado',
+      'en_proceso': 'confirmado',
+      'completada': 'completado',
+      'cancelada': 'cancelado'
+    };
+    return mapeo[estadoSolicitud] || 'pendiente';
+  };
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
-
-  // Datos de ejemplo - En producción vendrían del backend
-  const eventos = [
-    {
-      id: 1,
-      nombre: 'Boda de María y Juan',
-      fecha: '2025-11-15',
-      hora: '18:00',
-      ubicacion: 'Jardín Los Rosales',
-      estado: 'confirmado',
-      productos: 12,
-      paquetes: 2,
-      total: 2500000,
-      personas: 150
-    },
-    {
-      id: 2,
-      nombre: 'Cumpleaños de Sofía',
-      fecha: '2025-11-20',
-      hora: '15:00',
-      ubicacion: 'Salón Fiesta Azul',
-      estado: 'pendiente',
-      productos: 8,
-      paquetes: 1,
-      total: 1200000,
-      personas: 80
-    },
-    {
-      id: 3,
-      nombre: 'Evento Corporativo Tech Summit',
-      fecha: '2025-12-05',
-      hora: '09:00',
-      ubicacion: 'Centro de Convenciones',
-      estado: 'confirmado',
-      productos: 25,
-      paquetes: 3,
-      total: 5800000,
-      personas: 300
-    }
-  ];
 
   const getEstadoBadge = (estado) => {
     const badges = {
@@ -85,6 +100,38 @@ const MisEventos = () => {
     return evento.estado === selectedFilter;
   });
 
+  const handleVerDetalles = (evento) => {
+    // Mostrar modal con detalles completos del evento
+    alert(`Ver detalles de: ${evento.nombre}\nNúmero: ${evento.numero_solicitud}\nTotal: ${formatCurrency(evento.total)}\n\nEsta funcionalidad mostrará un modal con todos los detalles del evento.`);
+    // TODO: Implementar modal de detalles
+  };
+
+  const handleModificar = (evento) => {
+    if (evento.estado !== 'pendiente') {
+      alert('Solo puedes modificar eventos en estado pendiente');
+      return;
+    }
+    // Navegar a página de edición o mostrar modal
+    alert(`Modificar evento: ${evento.nombre}\n\nEsta funcionalidad permitirá editar los detalles del evento.`);
+    // TODO: Implementar edición de evento
+  };
+
+  const handleCancelar = async (evento) => {
+    if (!confirm(`¿Estás seguro de que deseas cancelar el evento "${evento.nombre}"?`)) {
+      return;
+    }
+
+    try {
+      await solicitudesService.cancelarSolicitud(evento.id);
+      alert('Evento cancelado exitosamente');
+      // Recargar eventos
+      window.location.reload();
+    } catch (error) {
+      console.error('Error al cancelar evento:', error);
+      alert('No se pudo cancelar el evento. Intenta nuevamente.');
+    }
+  };
+
   return (
     <div className="eventos-page">
       <div className="eventos-container">
@@ -102,6 +149,20 @@ const MisEventos = () => {
         </div>
 
         <div className="eventos-content">
+          {loading ? (
+            <div className="loading-state">
+              <div className="spinner"></div>
+              <p>Cargando eventos desde la base de datos...</p>
+            </div>
+          ) : error ? (
+            <div className="error-state">
+              <p>{error}</p>
+              <button className="btn-primary" onClick={() => window.location.reload()}>
+                Reintentar
+              </button>
+            </div>
+          ) : (
+            <>
           {/* Filtros */}
           <div className="eventos-filters">
             <button 
@@ -217,8 +278,27 @@ const MisEventos = () => {
                           <span className="total-value">{formatCurrency(evento.total)}</span>
                         </div>
                         <div className="evento-actions">
-                          <button className="btn-secondary">Ver Detalles</button>
-                          <button className="btn-primary">Modificar</button>
+                          <button 
+                            className="btn-secondary"
+                            onClick={() => handleVerDetalles(evento)}
+                          >
+                            Ver Detalles
+                          </button>
+                          <button 
+                            className="btn-primary"
+                            onClick={() => handleModificar(evento)}
+                            disabled={evento.estado !== 'pendiente'}
+                          >
+                            Modificar
+                          </button>
+                          {evento.estado === 'pendiente' && (
+                            <button 
+                              className="btn-danger"
+                              onClick={() => handleCancelar(evento)}
+                            >
+                              Cancelar
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -238,6 +318,8 @@ const MisEventos = () => {
               Planificar Nuevo Evento
             </button>
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -37,12 +37,9 @@
 
 /* Logo */
 .navbar-logo {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  background: #000;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #000;
   text-decoration: none;
   transition: var(--transition);
   border: none;
@@ -50,6 +47,20 @@
   font-family: inherit;
   letter-spacing: -0.02em;
   position: relative;
+  display: inline-block;
+  line-height: 1.2;
+  padding: 0.25rem 0;
+}
+
+/* Soporte para navegadores que no tienen background-clip */
+@supports not (background-clip: text) {
+  .navbar-logo {
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
+    color: var(--primary-orange);
+  }
 }
 
 .navbar-logo:hover {
@@ -721,7 +732,8 @@
   }
   
   .navbar-logo {
-    font-size: 1.7rem;
+    font-size: 1.3rem; /* Reducir para evitar cortes */
+    padding: 0.15rem 0;
   }
   
   .navbar-cart {

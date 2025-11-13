@@ -1,80 +1,113 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { pagosService, solicitudesService } from '../services/api';
 import '../styles/pages/Historial.css';
 
 const Historial = () => {
   const { isAuthenticated } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState('todos');
-  const [selectedYear] = useState('2025');
+  const [historial, setHistorial] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const cargarHistorial = async () => {
+    try {
+      setLoading(true);
+      
+      // Cargar pagos y solicitudes en paralelo
+      const [pagosResponse, solicitudesResponse] = await Promise.all([
+        pagosService.getMisPagos(),
+        solicitudesService.getMisSolicitudes()
+      ]);
+      
+      // Transformar pagos a formato de historial
+      const pagosTransformados = pagosResponse.pagos.map(pago => {
+        // Buscar la solicitud asociada
+        const solicitud = solicitudesResponse.find(s => s.solicitud_id === pago.solicitud_id);
+        
+        return {
+          id: `pago-${pago.pago_id}`,
+          tipo: 'pago',
+          descripcion: `${getTipoPagoLabel(pago.tipo_pago)} - ${pago.metodo_pago}`,
+          fecha: pago.fecha_pago,
+          monto: parseFloat(pago.monto),
+          estado: mapearEstadoPago(pago.estado_pago),
+          evento: solicitud ? (solicitud.tipo_evento || solicitud.numero_solicitud) : 'Evento',
+          metodoPago: pago.metodo_pago,
+          numero_transaccion: pago.numero_transaccion
+        };
+      });
+      
+      // Transformar solicitudes a formato de historial
+      const solicitudesTransformadas = solicitudesResponse.map(sol => ({
+        id: `solicitud-${sol.solicitud_id}`,
+        tipo: 'alquiler',
+        descripcion: `Solicitud ${sol.numero_solicitud}`,
+        fecha: sol.fecha_solicitud,
+        monto: parseFloat(sol.total_cotizacion),
+        estado: mapearEstadoSolicitud(sol.estado),
+        evento: sol.tipo_evento || sol.numero_solicitud,
+        items: (sol.total_productos || 0) + (sol.total_paquetes || 0)
+      }));
+      
+      // Combinar y ordenar por fecha
+      const historialCompleto = [...pagosTransformados, ...solicitudesTransformadas]
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      
+      setHistorial(historialCompleto);
+      setError(null);
+    } catch (err) {
+      console.error('Error al cargar historial:', err);
+      setError('No se pudo cargar el historial');
+      setHistorial([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTipoPagoLabel = (tipo) => {
+    const labels = {
+      'anticipo': 'Anticipo',
+      'deposito': 'Depósito',
+      'pago_final': 'Pago Final',
+      'devolucion_deposito': 'Devolución de Depósito'
+    };
+    return labels[tipo] || tipo;
+  };
+
+  const mapearEstadoPago = (estado) => {
+    const mapeo = {
+      'completado': 'completado',
+      'pendiente': 'pendiente',
+      'fallido': 'cancelado',
+      'reembolsado': 'reembolsado'
+    };
+    return mapeo[estado] || 'pendiente';
+  };
+
+  const mapearEstadoSolicitud = (estado) => {
+    const mapeo = {
+      'pendiente': 'pendiente',
+      'aprobada': 'aprobado',
+      'rechazada': 'cancelado',
+      'en_proceso': 'aprobado',
+      'completada': 'completado',
+      'cancelada': 'cancelado'
+    };
+    return mapeo[estado] || 'pendiente';
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated()) return;
+    
+    cargarHistorial();
+  }, [cargarHistorial, isAuthenticated]);
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
-
-  // Datos de ejemplo - En producción vendrían del backend
-  const historial = [
-    {
-      id: 1,
-      tipo: 'alquiler',
-      descripcion: 'Alquiler de sillas y mesas para evento',
-      fecha: '2025-10-15',
-      monto: 850000,
-      estado: 'completado',
-      evento: 'Boda de María y Juan',
-      items: 15
-    },
-    {
-      id: 2,
-      tipo: 'pago',
-      descripcion: 'Pago inicial - Evento Corporativo',
-      fecha: '2025-10-10',
-      monto: 2000000,
-      estado: 'aprobado',
-      evento: 'Tech Summit 2025',
-      metodoPago: 'Transferencia'
-    },
-    {
-      id: 3,
-      tipo: 'devolucion',
-      descripcion: 'Devolución de equipos de sonido',
-      fecha: '2025-10-05',
-      monto: 0,
-      estado: 'completado',
-      evento: 'Cumpleaños de Sofía',
-      items: 8
-    },
-    {
-      id: 4,
-      tipo: 'alquiler',
-      descripcion: 'Paquete Premium - Decoración completa',
-      fecha: '2025-09-28',
-      monto: 3500000,
-      estado: 'completado',
-      evento: 'Aniversario Empresa XYZ',
-      items: 25
-    },
-    {
-      id: 5,
-      tipo: 'pago',
-      descripcion: 'Pago final - Cumpleaños infantil',
-      fecha: '2025-09-20',
-      monto: 650000,
-      estado: 'aprobado',
-      evento: 'Cumpleaños de Sofía',
-      metodoPago: 'Tarjeta de crédito'
-    },
-    {
-      id: 6,
-      tipo: 'cancelacion',
-      descripcion: 'Cancelación de reserva',
-      fecha: '2025-09-15',
-      monto: -500000,
-      estado: 'reembolsado',
-      evento: 'Evento Familiar',
-      metodoPago: 'Reembolso'
-    }
-  ];
 
   const getTipoIcon = (tipo) => {
     const icons = {
@@ -176,6 +209,20 @@ const Historial = () => {
         </div>
 
         <div className="historial-content">
+          {loading ? (
+            <div className="loading-state">
+              <div className="spinner"></div>
+              <p>Cargando historial...</p>
+            </div>
+          ) : error ? (
+            <div className="error-state">
+              <p>{error}</p>
+              <button className="btn-primary" onClick={cargarHistorial}>
+                Reintentar
+              </button>
+            </div>
+          ) : (
+            <>
           {/* Estadísticas */}
           <div className="stats-section">
             <div className="stat-card">
@@ -342,6 +389,8 @@ const Historial = () => {
               Exportar Historial
             </button>
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>

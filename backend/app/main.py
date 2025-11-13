@@ -15,11 +15,13 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import engine, get_db
 from app.models import models
+from app.models import solicitud_models  # Importar modelos de solicitudes
 from app.api.v1.endpoints import router as api_router
 import uvicorn
 
 # Crear las tablas en la base de datos (opcional si usas Alembic)
 # models.Base.metadata.create_all(bind=engine)
+# solicitud_models.Base.metadata.create_all(bind=engine)
 
 # Inicializar aplicación FastAPI
 app = FastAPI(

@@ -2,49 +2,20 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useCarrito } from "../../context/CarritoContext";
 import "../../styles/components/common/ProductDetailModal.css";
 
 const ProductDetailModal = ({ isOpen, onClose, productId }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { agregarItem } = useCarrito();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Obtener detalles del producto cuando se abre el modal
-  useEffect(() => {
-    console.log("Modal state changed:", { isOpen, productId });
-    if (isOpen && productId) {
-      fetchProductDetails();
-    }
-  }, [isOpen, productId]);
-
-  // Cerrar modal con ESC y manejar scroll del body
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      // Prevenir scroll del body y compensar por scrollbar
-      const scrollBarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollBarWidth}px`;
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-    };
-  }, [isOpen, onClose]);
-
+  // Función para obtener detalles del producto
   const fetchProductDetails = async () => {
     console.log("Fetching product details for ID:", productId);
     setLoading(true);
@@ -71,6 +42,39 @@ const ProductDetailModal = ({ isOpen, onClose, productId }) => {
       setLoading(false);
     }
   };
+
+  // Obtener detalles del producto cuando se abre el modal
+  useEffect(() => {
+    console.log("Modal state changed:", { isOpen, productId });
+    if (isOpen && productId) {
+      fetchProductDetails();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, productId]);
+
+  // Cerrar modal con ESC y manejar scroll del body
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      // Prevenir scroll del body y compensar por scrollbar
+      const scrollBarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    };
+  }, [isOpen, onClose]);
 
   const handleBackdropClick = (e) => {
     // Solo cerrar si se hizo clic en el overlay, no en el contenido del modal
@@ -110,27 +114,51 @@ const ProductDetailModal = ({ isOpen, onClose, productId }) => {
     }
   };
 
-  const handleRentar = () => {
+  const handleAddToCart = () => {
     if (isAuthenticated()) {
-      // Si está autenticado, proceder con la renta
-      // TODO: Implementar lógica de renta
-      console.log("Proceder con renta");
+      // Agregar al carrito usando el contexto
+      const productToAdd = {
+        id: product.producto_id,
+        name: product.nombre,
+        codigo_producto: product.codigo_producto,
+        imageUrl: product.imagen_url,
+        price: product.precio_por_dia,
+        stock: product.stock_disponible
+      };
+      agregarItem(productToAdd, 1, 1);
+      onClose();
+      
+      // Mostrar confirmación
+      const confirmNav = window.confirm('Producto agregado al carrito. ¿Deseas ir al carrito?');
+      if (confirmNav) {
+        navigate('/carrito');
+      }
     } else {
       // Si no está autenticado, mostrar modal
       setShowLoginModal(true);
     }
   };
 
-  const handleAddToFavorites = () => {
+  const handleRentar = () => {
     if (isAuthenticated()) {
-      // Si está autenticado, agregar a favoritos
-      // TODO: Implementar lógica de favoritos
-      console.log("Agregar a favoritos");
+      // Si está autenticado, proceder con la renta
+      handleAddToCart();
     } else {
       // Si no está autenticado, mostrar modal
       setShowLoginModal(true);
     }
   };
+
+  // const handleAddToFavorites = () => {
+  //   if (isAuthenticated()) {
+  //     // Si está autenticado, agregar a favoritos
+  //     // TODO: Implementar lógica de favoritos
+  //     console.log("Agregar a favoritos");
+  //   } else {
+  //     // Si no está autenticado, mostrar modal
+  //     setShowLoginModal(true);
+  //   }
+  // };
 
   const handleContactForQuote = () => {
     // Cerrar el modal actual primero
@@ -334,20 +362,22 @@ const ProductDetailModal = ({ isOpen, onClose, productId }) => {
               <div className="product-detail-actions">
                 <button
                   className="product-detail-btn primary"
+                  onClick={handleAddToCart}
+                  disabled={product.stock_disponible === 0}
+                >
+                  {product.stock_disponible === 0
+                    ? "Sin stock"
+                    : "🛒 Agregar al Carrito"}
+                </button>
+
+                <button
+                  className="product-detail-btn secondary"
                   onClick={handleRentar}
                   disabled={product.stock_disponible === 0}
                 >
                   {product.stock_disponible === 0
                     ? "Sin stock"
                     : "Rentar ahora"}
-                </button>
-
-                <button 
-                  className="product-detail-btn secondary"
-                  onClick={handleAddToFavorites}
-                  disabled={product.stock_disponible === 0}
-                >
-                  ❤️ Agregar a favoritos
                 </button>
 
                 <button 

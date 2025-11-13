@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { CarritoProvider } from './context/CarritoContext';
 import './styles/App.css';
 import Navbar from './components/common/Navbar'; 
 import Footer from './components/common/Footer';
@@ -15,6 +16,7 @@ import MisEventos from './pages/MisEventos';
 import Historial from './pages/Historial';
 import MisTarjetas from './pages/MisTarjetas';
 import Carrito from './pages/Carrito';
+import Checkout from './pages/Checkout';
 // Importaciones para administradores
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -34,9 +36,10 @@ function App() {
 
   return (
     <AuthProvider>
-      {!isAuthPage && !isAdminPage && <Navbar/>}
-      <main className={isAuthPage || isAdminPage ? 'auth-main' : 'main'}>
-        <Routes>
+      <CarritoProvider>
+        {!isAuthPage && !isAdminPage && <Navbar/>}
+        <main className={isAuthPage || isAdminPage ? 'auth-main' : 'main'}>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/registro" element={<Register />} />
           <Route path="/login" element={<Login />} />
@@ -60,6 +63,7 @@ function App() {
           
           {/* Ruta del carrito */}
           <Route path="/carrito" element={<Carrito />} />
+          <Route path="/checkout" element={<Checkout />} />
           {/* Ruta 404 */}
           <Route path="*" element={
             <div className="coming-soon">
@@ -67,9 +71,10 @@ function App() {
               <p>La página que buscas no existe</p>
             </div>
           } />
-        </Routes>
-      </main>
-      {!isAuthPage && !isAdminPage && <Footer/>}
+          </Routes>
+        </main>
+        {!isAuthPage && !isAdminPage && <Footer/>}
+      </CarritoProvider>
     </AuthProvider>
   );
 }

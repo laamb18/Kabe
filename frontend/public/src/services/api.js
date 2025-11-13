@@ -14,7 +14,14 @@ const apiRequest = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      
+      // Crear un error con más información
+      const error = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      error.status = response.status;
+      error.detail = errorData.detail;
+      error.response = errorData;
+      
+      throw error;
     }
 
     return await response.json();
@@ -426,4 +433,140 @@ export const homeService = {
       throw error;
     }
   },
+};
+
+// Servicios para solicitudes (eventos)
+export const solicitudesService = {
+  // Obtener todas las solicitudes del usuario actual
+  getMisSolicitudes: () => {
+    const token = authService.getToken();
+    return apiRequest('/me/solicitudes', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  },
+  
+  // Obtener detalle de una solicitud
+  getSolicitudById: (solicitudId) => {
+    const token = authService.getToken();
+    return apiRequest(`/me/solicitudes/${solicitudId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  },
+  
+  // Crear nueva solicitud
+  crearSolicitud: (solicitudData) => {
+    const token = authService.getToken();
+    return apiRequest('/me/solicitudes', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(solicitudData),
+    });
+  },
+  
+  // Cancelar solicitud
+  cancelarSolicitud: (solicitudId) => {
+    const token = authService.getToken();
+    return apiRequest(`/me/solicitudes/${solicitudId}/cancelar`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  },
+};
+
+// Servicios para solicitudes (admin)
+export const adminSolicitudesService = {
+  // Obtener todas las solicitudes
+  getAll: (skip = 0, limit = 100) => 
+    authenticatedRequest(`/admin/solicitudes?skip=${skip}&limit=${limit}`, {}, true),
+};
+
+
+// ============================================
+// SERVICIOS PARA TARJETAS
+// ============================================
+export const tarjetasService = {
+  // Obtener todas las tarjetas
+  getMisTarjetas: () => {
+    const token = authService.getToken();
+    return apiRequest('/me/tarjetas', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+  },
+  
+  // Crear tarjeta
+  crearTarjeta: (tarjetaData) => {
+    const token = authService.getToken();
+    return apiRequest('/me/tarjetas', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(tarjetaData)
+    });
+  },
+  
+  // Actualizar tarjeta
+  actualizarTarjeta: (tarjetaId, tarjetaData) => {
+    const token = authService.getToken();
+    return apiRequest(`/me/tarjetas/${tarjetaId}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(tarjetaData)
+    });
+  },
+  
+  // Eliminar tarjeta
+  eliminarTarjeta: (tarjetaId) => {
+    const token = authService.getToken();
+    return apiRequest(`/me/tarjetas/${tarjetaId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+  },
+  
+  // Establecer como predeterminada
+  establecerPredeterminada: (tarjetaId) => {
+    const token = authService.getToken();
+    return apiRequest(`/me/tarjetas/${tarjetaId}/predeterminada`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+  }
+};
+
+// ============================================
+// SERVICIOS PARA PAGOS
+// ============================================
+export const pagosService = {
+  // Obtener mis pagos
+  getMisPagos: () => {
+    const token = authService.getToken();
+    return apiRequest('/me/pagos', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+  },
+  
+  // Obtener pagos de una solicitud
+  getPagosSolicitud: (solicitudId) => {
+    const token = authService.getToken();
+    return apiRequest(`/me/solicitudes/${solicitudId}/pagos`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+  },
+  
+  // Crear pago
+  crearPago: (pagoData) => {
+    const token = authService.getToken();
+    return apiRequest('/me/pagos', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(pagoData)
+    });
+  }
 };

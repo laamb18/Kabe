@@ -1650,3 +1650,500 @@ def change_my_password(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al cambiar contraseña: {str(e)}")
+
+
+# ========== ENDPOINTS DE SOLICITUDES (EVENTOS) ==========
+from app.models.solicitud_models import Solicitud, SolicitudProducto, SolicitudPaquete
+from app.schemas.solicitud_schemas import (
+    SolicitudCreate, SolicitudUpdate, SolicitudResponse, SolicitudListResponse,
+    SolicitudProductoResponse, SolicitudPaqueteResponse
+)
+from app.crud import solicitud_crud
+
+@router.get("/me/solicitudes", response_model=List[SolicitudListResponse])
+def get_mis_solicitudes(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener todas las solicitudes del usuario actual"""
+    try:
+        solicitudes = solicitud_crud.obtener_solicitudes_usuario(db, current_user.usuario_id, skip, limit)
+        
+        result = []
+        for sol in solicitudes:
+            result.append({
+                "solicitud_id": sol.solicitud_id,
+                "numero_solicitud": sol.numero_solicitud,
+                "fecha_evento_inicio": sol.fecha_evento_inicio,
+                "fecha_evento_fin": sol.fecha_evento_fin,
+                "tipo_evento": sol.tipo_evento,
+                "num_personas_estimado": sol.num_personas_estimado,
+                "estado": sol.estado.value if hasattr(sol.estado, 'value') else sol.estado,
+                "total_cotizacion": float(sol.total_cotizacion),
+                "fecha_solicitud": sol.fecha_solicitud,
+                "total_productos": len(sol.solicitud_productos),
+                "total_paquetes": len(sol.solicitud_paquetes)
+            })
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener solicitudes: {str(e)}")
+
+@router.get("/me/solicitudes/{solicitud_id}", response_model=SolicitudResponse)
+def get_mi_solicitud(
+    solicitud_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener detalle de una solicitud específica del usuario"""
+    try:
+        solicitud = solicitud_crud.obtener_solicitud_por_id(db, solicitud_id, current_user.usuario_id)
+        
+        if not solicitud:
+            raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+        
+        # Construir respuesta con productos y paquetes
+        productos_response = []
+        for sp in solicitud.solicitud_productos:
+            productos_response.append({
+                "solicitud_producto_id": sp.solicitud_producto_id,
+                "solicitud_id": sp.solicitud_id,
+                "producto_id": sp.producto_id,
+                "cantidad_solicitada": sp.cantidad_solicitada,
+                "precio_unitario": float(sp.precio_unitario),
+                "dias_renta": sp.dias_renta,
+                "subtotal": float(sp.subtotal),
+                "deposito_unitario": float(sp.deposito_unitario),
+                "deposito_total": float(sp.deposito_total),
+                "producto_nombre": sp.producto.nombre if sp.producto else None,
+                "producto_codigo": sp.producto.codigo_producto if sp.producto else None
+            })
+        
+        paquetes_response = []
+        for sp in solicitud.solicitud_paquetes:
+            paquetes_response.append({
+                "solicitud_paquete_id": sp.solicitud_paquete_id,
+                "solicitud_id": sp.solicitud_id,
+                "paquete_id": sp.paquete_id,
+                "cantidad_solicitada": sp.cantidad_solicitada,
+                "precio_unitario": float(sp.precio_unitario),
+                "dias_renta": sp.dias_renta,
+                "subtotal": float(sp.subtotal),
+                "paquete_nombre": sp.paquete.nombre if sp.paquete else None,
+                "paquete_codigo": sp.paquete.codigo_paquete if sp.paquete else None
+            })
+        
+        return {
+            "solicitud_id": solicitud.solicitud_id,
+            "usuario_id": solicitud.usuario_id,
+            "numero_solicitud": solicitud.numero_solicitud,
+            "fecha_evento_inicio": solicitud.fecha_evento_inicio,
+            "fecha_evento_fin": solicitud.fecha_evento_fin,
+            "direccion_evento": solicitud.direccion_evento,
+            "tipo_evento": solicitud.tipo_evento,
+            "num_personas_estimado": solicitud.num_personas_estimado,
+            "estado": solicitud.estado.value if hasattr(solicitud.estado, 'value') else solicitud.estado,
+            "observaciones_cliente": solicitud.observaciones_cliente,
+            "observaciones_admin": solicitud.observaciones_admin,
+            "subtotal": float(solicitud.subtotal),
+            "descuento": float(solicitud.descuento),
+            "impuestos": float(solicitud.impuestos),
+            "deposito_total": float(solicitud.deposito_total),
+            "total_cotizacion": float(solicitud.total_cotizacion),
+            "fecha_solicitud": solicitud.fecha_solicitud,
+            "fecha_respuesta": solicitud.fecha_respuesta,
+            "fecha_entrega": solicitud.fecha_entrega,
+            "fecha_devolucion": solicitud.fecha_devolucion,
+            "solicitud_productos": productos_response,
+            "solicitud_paquetes": paquetes_response
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener solicitud: {str(e)}")
+
+@router.post("/me/solicitudes", response_model=SolicitudResponse)
+def crear_mi_solicitud(
+    solicitud_data: SolicitudCreate,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Crear una nueva solicitud de evento"""
+    try:
+        # Validar que haya al menos un producto o paquete
+        if not solicitud_data.productos and not solicitud_data.paquetes:
+            raise HTTPException(status_code=400, detail="Debe incluir al menos un producto o paquete")
+        
+        # Validar fechas
+        if solicitud_data.fecha_evento_fin < solicitud_data.fecha_evento_inicio:
+            raise HTTPException(status_code=400, detail="La fecha de fin no puede ser anterior a la fecha de inicio")
+        
+        # Crear solicitud
+        nueva_solicitud = solicitud_crud.crear_solicitud(db, solicitud_data, current_user.usuario_id)
+        
+        # Recargar con relaciones
+        solicitud = solicitud_crud.obtener_solicitud_por_id(db, nueva_solicitud.solicitud_id, current_user.usuario_id)
+        
+        # Construir respuesta
+        productos_response = []
+        for sp in solicitud.solicitud_productos:
+            productos_response.append({
+                "solicitud_producto_id": sp.solicitud_producto_id,
+                "solicitud_id": sp.solicitud_id,
+                "producto_id": sp.producto_id,
+                "cantidad_solicitada": sp.cantidad_solicitada,
+                "precio_unitario": float(sp.precio_unitario),
+                "dias_renta": sp.dias_renta,
+                "subtotal": float(sp.subtotal),
+                "deposito_unitario": float(sp.deposito_unitario),
+                "deposito_total": float(sp.deposito_total),
+                "producto_nombre": sp.producto.nombre if sp.producto else None,
+                "producto_codigo": sp.producto.codigo_producto if sp.producto else None
+            })
+        
+        paquetes_response = []
+        for sp in solicitud.solicitud_paquetes:
+            paquetes_response.append({
+                "solicitud_paquete_id": sp.solicitud_paquete_id,
+                "solicitud_id": sp.solicitud_id,
+                "paquete_id": sp.paquete_id,
+                "cantidad_solicitada": sp.cantidad_solicitada,
+                "precio_unitario": float(sp.precio_unitario),
+                "dias_renta": sp.dias_renta,
+                "subtotal": float(sp.subtotal),
+                "paquete_nombre": sp.paquete.nombre if sp.paquete else None,
+                "paquete_codigo": sp.paquete.codigo_paquete if sp.paquete else None
+            })
+        
+        return {
+            "solicitud_id": solicitud.solicitud_id,
+            "usuario_id": solicitud.usuario_id,
+            "numero_solicitud": solicitud.numero_solicitud,
+            "fecha_evento_inicio": solicitud.fecha_evento_inicio,
+            "fecha_evento_fin": solicitud.fecha_evento_fin,
+            "direccion_evento": solicitud.direccion_evento,
+            "tipo_evento": solicitud.tipo_evento,
+            "num_personas_estimado": solicitud.num_personas_estimado,
+            "estado": solicitud.estado.value if hasattr(solicitud.estado, 'value') else solicitud.estado,
+            "observaciones_cliente": solicitud.observaciones_cliente,
+            "observaciones_admin": solicitud.observaciones_admin,
+            "subtotal": float(solicitud.subtotal),
+            "descuento": float(solicitud.descuento),
+            "impuestos": float(solicitud.impuestos),
+            "deposito_total": float(solicitud.deposito_total),
+            "total_cotizacion": float(solicitud.total_cotizacion),
+            "fecha_solicitud": solicitud.fecha_solicitud,
+            "fecha_respuesta": solicitud.fecha_respuesta,
+            "fecha_entrega": solicitud.fecha_entrega,
+            "fecha_devolucion": solicitud.fecha_devolucion,
+            "solicitud_productos": productos_response,
+            "solicitud_paquetes": paquetes_response
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al crear solicitud: {str(e)}")
+
+@router.put("/me/solicitudes/{solicitud_id}/cancelar")
+def cancelar_mi_solicitud(
+    solicitud_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Cancelar una solicitud"""
+    try:
+        solicitud = solicitud_crud.cancelar_solicitud(db, solicitud_id, current_user.usuario_id)
+        
+        if not solicitud:
+            raise HTTPException(status_code=404, detail="Solicitud no encontrada o no se puede cancelar")
+        
+        return {
+            "message": "Solicitud cancelada exitosamente",
+            "solicitud_id": solicitud.solicitud_id,
+            "numero_solicitud": solicitud.numero_solicitud,
+            "estado": solicitud.estado.value if hasattr(solicitud.estado, 'value') else solicitud.estado
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al cancelar solicitud: {str(e)}")
+
+# ========== ENDPOINTS DE SOLICITUDES PARA ADMIN ==========
+@router.get("/admin/solicitudes")
+def get_todas_solicitudes(
+    skip: int = 0,
+    limit: int = 100,
+    current_admin: Administrador = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Obtener todas las solicitudes (solo administradores)"""
+    try:
+        solicitudes = solicitud_crud.obtener_todas_solicitudes(db, skip, limit)
+        
+        result = []
+        for sol in solicitudes:
+            result.append({
+                "solicitud_id": sol.solicitud_id,
+                "usuario_id": sol.usuario_id,
+                "numero_solicitud": sol.numero_solicitud,
+                "fecha_evento_inicio": sol.fecha_evento_inicio.isoformat() if sol.fecha_evento_inicio else None,
+                "fecha_evento_fin": sol.fecha_evento_fin.isoformat() if sol.fecha_evento_fin else None,
+                "tipo_evento": sol.tipo_evento,
+                "num_personas_estimado": sol.num_personas_estimado,
+                "estado": sol.estado.value if hasattr(sol.estado, 'value') else sol.estado,
+                "total_cotizacion": float(sol.total_cotizacion),
+                "fecha_solicitud": sol.fecha_solicitud.isoformat() if sol.fecha_solicitud else None,
+                "total_productos": len(sol.solicitud_productos),
+                "total_paquetes": len(sol.solicitud_paquetes)
+            })
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener solicitudes: {str(e)}")
+
+
+# ============================================
+# ENDPOINTS PARA PAGOS Y TARJETAS
+# ============================================
+
+from app.schemas.pago_schemas import (
+    PagoCreate, PagoResponse, PagoListResponse,
+    TarjetaCreate, TarjetaUpdate, TarjetaResponse, TarjetaListResponse
+)
+from app.crud import pago_crud
+from datetime import date
+
+# ============================================
+# ENDPOINTS DE TARJETAS (Usuario autenticado)
+# ============================================
+
+@router.get("/me/tarjetas", response_model=TarjetaListResponse, tags=["Tarjetas"])
+def obtener_mis_tarjetas(
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener todas las tarjetas del usuario actual"""
+    try:
+        tarjetas = pago_crud.obtener_tarjetas_usuario(db, current_user.usuario_id)
+        
+        # Agregar información de expiración
+        tarjetas_response = []
+        for tarjeta in tarjetas:
+            tarjeta_dict = {
+                "tarjeta_id": tarjeta.tarjeta_id,
+                "usuario_id": tarjeta.usuario_id,
+                "tipo_tarjeta": tarjeta.tipo_tarjeta.value,
+                "marca": tarjeta.marca.value,
+                "ultimos_digitos": tarjeta.ultimos_digitos,
+                "nombre_titular": tarjeta.nombre_titular,
+                "mes_expiracion": tarjeta.mes_expiracion,
+                "anio_expiracion": tarjeta.anio_expiracion,
+                "es_predeterminada": tarjeta.es_predeterminada,
+                "activa": tarjeta.activa,
+                "fecha_creacion": tarjeta.fecha_creacion,
+                "fecha_actualizacion": tarjeta.fecha_actualizacion,
+                "esta_expirada": pago_crud.verificar_tarjeta_expirada(tarjeta),
+                "expira_pronto": pago_crud.verificar_tarjeta_expira_pronto(tarjeta)
+            }
+            tarjetas_response.append(TarjetaResponse(**tarjeta_dict))
+        
+        return TarjetaListResponse(tarjetas=tarjetas_response, total=len(tarjetas_response))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener tarjetas: {str(e)}")
+
+
+@router.post("/me/tarjetas", response_model=TarjetaResponse, tags=["Tarjetas"])
+async def crear_tarjeta(
+    request: Request,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Crear una nueva tarjeta para el usuario actual"""
+    try:
+        # Leer el body raw para ver qué está llegando
+        body = await request.json()
+        print(f"📥 Body RAW recibido: {body}")
+        
+        # Intentar parsear con Pydantic
+        tarjeta_data = TarjetaCreate(**body)
+        
+        print(f"✅ Datos parseados correctamente:")
+        print(f"   Usuario ID: {current_user.usuario_id}")
+        print(f"   Tipo: {tarjeta_data.tipo_tarjeta}")
+        print(f"   Marca: {tarjeta_data.marca}")
+        print(f"   Número completo: ****{tarjeta_data.numero_completo[-4:]}")
+        print(f"   Nombre: {tarjeta_data.nombre_titular}")
+        print(f"   Mes: {tarjeta_data.mes_expiracion}")
+        print(f"   Año: {tarjeta_data.anio_expiracion}")
+        
+        nueva_tarjeta = pago_crud.crear_tarjeta(db, tarjeta_data, current_user.usuario_id)
+        
+        return TarjetaResponse(
+            tarjeta_id=nueva_tarjeta.tarjeta_id,
+            usuario_id=nueva_tarjeta.usuario_id,
+            tipo_tarjeta=nueva_tarjeta.tipo_tarjeta.value,
+            marca=nueva_tarjeta.marca.value,
+            ultimos_digitos=nueva_tarjeta.ultimos_digitos,
+            nombre_titular=nueva_tarjeta.nombre_titular,
+            mes_expiracion=nueva_tarjeta.mes_expiracion,
+            anio_expiracion=nueva_tarjeta.anio_expiracion,
+            es_predeterminada=nueva_tarjeta.es_predeterminada,
+            activa=nueva_tarjeta.activa,
+            fecha_creacion=nueva_tarjeta.fecha_creacion,
+            fecha_actualizacion=nueva_tarjeta.fecha_actualizacion,
+            esta_expirada=pago_crud.verificar_tarjeta_expirada(nueva_tarjeta),
+            expira_pronto=pago_crud.verificar_tarjeta_expira_pronto(nueva_tarjeta)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al crear tarjeta: {str(e)}")
+
+
+@router.put("/me/tarjetas/{tarjeta_id}", response_model=TarjetaResponse, tags=["Tarjetas"])
+def actualizar_tarjeta(
+    tarjeta_id: int,
+    tarjeta_data: TarjetaUpdate,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Actualizar una tarjeta del usuario actual"""
+    try:
+        tarjeta = pago_crud.actualizar_tarjeta(db, tarjeta_id, current_user.usuario_id, tarjeta_data)
+        if not tarjeta:
+            raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
+        
+        return TarjetaResponse(
+            tarjeta_id=tarjeta.tarjeta_id,
+            usuario_id=tarjeta.usuario_id,
+            tipo_tarjeta=tarjeta.tipo_tarjeta.value,
+            marca=tarjeta.marca.value,
+            ultimos_digitos=tarjeta.ultimos_digitos,
+            nombre_titular=tarjeta.nombre_titular,
+            mes_expiracion=tarjeta.mes_expiracion,
+            anio_expiracion=tarjeta.anio_expiracion,
+            es_predeterminada=tarjeta.es_predeterminada,
+            activa=tarjeta.activa,
+            fecha_creacion=tarjeta.fecha_creacion,
+            fecha_actualizacion=tarjeta.fecha_actualizacion,
+            esta_expirada=pago_crud.verificar_tarjeta_expirada(tarjeta),
+            expira_pronto=pago_crud.verificar_tarjeta_expira_pronto(tarjeta)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al actualizar tarjeta: {str(e)}")
+
+
+@router.delete("/me/tarjetas/{tarjeta_id}", tags=["Tarjetas"])
+def eliminar_tarjeta(
+    tarjeta_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Eliminar una tarjeta del usuario actual"""
+    try:
+        success = pago_crud.eliminar_tarjeta(db, tarjeta_id, current_user.usuario_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
+        
+        return {"message": "Tarjeta eliminada exitosamente"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar tarjeta: {str(e)}")
+
+
+@router.put("/me/tarjetas/{tarjeta_id}/predeterminada", response_model=TarjetaResponse, tags=["Tarjetas"])
+def establecer_tarjeta_predeterminada(
+    tarjeta_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Establecer una tarjeta como predeterminada"""
+    try:
+        tarjeta = pago_crud.establecer_tarjeta_predeterminada(db, tarjeta_id, current_user.usuario_id)
+        if not tarjeta:
+            raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
+        
+        return TarjetaResponse(
+            tarjeta_id=tarjeta.tarjeta_id,
+            usuario_id=tarjeta.usuario_id,
+            tipo_tarjeta=tarjeta.tipo_tarjeta.value,
+            marca=tarjeta.marca.value,
+            ultimos_digitos=tarjeta.ultimos_digitos,
+            nombre_titular=tarjeta.nombre_titular,
+            mes_expiracion=tarjeta.mes_expiracion,
+            anio_expiracion=tarjeta.anio_expiracion,
+            es_predeterminada=tarjeta.es_predeterminada,
+            activa=tarjeta.activa,
+            fecha_creacion=tarjeta.fecha_creacion,
+            fecha_actualizacion=tarjeta.fecha_actualizacion,
+            esta_expirada=pago_crud.verificar_tarjeta_expirada(tarjeta),
+            expira_pronto=pago_crud.verificar_tarjeta_expira_pronto(tarjeta)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al establecer tarjeta predeterminada: {str(e)}")
+
+
+# ============================================
+# ENDPOINTS DE PAGOS (Usuario autenticado)
+# ============================================
+
+@router.get("/me/pagos", response_model=PagoListResponse, tags=["Pagos"])
+def obtener_mis_pagos(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener todos los pagos del usuario actual"""
+    try:
+        pagos = pago_crud.obtener_pagos_usuario(db, current_user.usuario_id, skip, limit)
+        return PagoListResponse(pagos=pagos, total=len(pagos))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener pagos: {str(e)}")
+
+
+@router.get("/me/solicitudes/{solicitud_id}/pagos", response_model=PagoListResponse, tags=["Pagos"])
+def obtener_pagos_solicitud(
+    solicitud_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener pagos de una solicitud específica"""
+    try:
+        pagos = pago_crud.obtener_pagos_solicitud(db, solicitud_id, current_user.usuario_id)
+        return PagoListResponse(pagos=pagos, total=len(pagos))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener pagos: {str(e)}")
+
+
+@router.post("/me/pagos", response_model=PagoResponse, tags=["Pagos"])
+def crear_pago(
+    pago_data: PagoCreate,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Crear un nuevo pago"""
+    try:
+        # Verificar que la solicitud pertenece al usuario
+        from app.crud import solicitud_crud
+        solicitud = solicitud_crud.obtener_solicitud_por_id(db, pago_data.solicitud_id, current_user.usuario_id)
+        if not solicitud:
+            raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+        
+        # Si el método es tarjeta, verificar que la tarjeta existe
+        if pago_data.metodo_pago == "tarjeta" and pago_data.tarjeta_id:
+            tarjeta = pago_crud.obtener_tarjeta_por_id(db, pago_data.tarjeta_id, current_user.usuario_id)
+            if not tarjeta:
+                raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
+        
+        nuevo_pago = pago_crud.crear_pago(db, pago_data, current_user.usuario_id)
+        return nuevo_pago
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al crear pago: {str(e)}")

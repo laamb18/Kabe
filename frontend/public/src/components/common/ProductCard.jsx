@@ -1,9 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCarrito } from '../../context/CarritoContext';
 import ProductDetailModal from './ProductDetailModal';
 import '../../styles/components/common/ProductCard.css';
 
-const ProductCard = ({ productInfo }) => {
+const ProductCard = ({ productInfo, onAddToCart }) => {
   const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+  const { agregarItem } = useCarrito();
   
   const {
     id,
@@ -25,8 +29,24 @@ const ProductCard = ({ productInfo }) => {
     }).format(price);
   };
 
-  const handleCardClick = () => {
+  const handleDetailsClick = (e) => {
+    e.stopPropagation();
     setShowModal(true);
+  };
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    if (onAddToCart) {
+      onAddToCart(productInfo);
+    } else {
+      // Agregar al carrito usando el contexto
+      agregarItem(productInfo, 1, 1);
+      // Mostrar notificación o navegar al carrito
+      const confirmNav = window.confirm('Producto agregado al carrito. ¿Deseas ir al carrito?');
+      if (confirmNav) {
+        navigate('/carrito');
+      }
+    }
   };
 
   const handleCloseModal = () => {
@@ -35,17 +55,7 @@ const ProductCard = ({ productInfo }) => {
 
   return (
     <>
-      <div 
-        className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`}
-        onClick={handleCardClick}
-        role="button"
-        tabIndex={0}
-        onKeyPress={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleCardClick();
-          }
-        }}
-      >
+      <div className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`}>
         <div 
           className="product-card-image"
           style={{ backgroundImage: `url(${imageUrl})` }}
@@ -76,15 +86,32 @@ const ProductCard = ({ productInfo }) => {
               {isOutOfStock ? 'Sin stock' : `${stock} disponibles`}
             </span>
           </div>
+
+          <div className="product-card-actions">
+            <button 
+              className="product-card-btn details"
+              onClick={handleDetailsClick}
+              aria-label="Ver detalles"
+            >
+              Ver Detalles
+            </button>
+            <button 
+              className="product-card-btn add-to-cart"
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              aria-label="Agregar al carrito"
+            >
+              {isOutOfStock ? 'Sin stock' : '🛒 Agregar'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {showModal && (
-        <ProductDetailModal
-          productId={id}
-          onClose={handleCloseModal}
-        />
-      )}
+      <ProductDetailModal
+        isOpen={showModal}
+        productId={id}
+        onClose={handleCloseModal}
+      />
     </>
   );
 };

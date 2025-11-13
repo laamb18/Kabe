@@ -57,6 +57,10 @@ class Usuario(Base):
     direccion = Column(Text)
     fecha_registro = Column(DateTime(timezone=True), server_default=func.now())
     fecha_actualizacion = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relaciones
+    tarjetas = relationship("TarjetaUsuario", back_populates="usuario")
+    pagos = relationship("Pago", back_populates="usuario")
 
 # Modelo Administrador (coincide con tu BD)
 class Administrador(Base):
